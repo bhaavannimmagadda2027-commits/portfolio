@@ -3,7 +3,44 @@
   var TAU = Math.PI * 2;
   var AMBER = [0.86, 0.52, 0.18], GOLD = [0.96, 0.76, 0.46], RUST = [0.58, 0.27, 0.1],
       STEEL = [0.4, 0.62, 0.74], PALE = [0.93, 0.89, 0.8];
-  var STEPS = 6, STAIR_X = 0.05, STAIR_W = 0.15, STAIR_V = 0.76, STAIR_RISE = 0.1;
+  /* The building is rebuilt from the dots of the reference image. Ground is y 3. */
+  var GROUND = 3, FLOOR = 6.6 / 240, TOWER_K = 6.75 / 1090, BELOW_K = 2.75 / 364, GROUND_PX = 1126;
+  var dots = null, cursor = { foot: 0, footEdge: 0, soil: 0, ground: 0, tower: 0, towerEdge: 0 }, towerWaiting = false;
+  /* Mark dots at the end of a run, across and down, so the silhouette can be drawn more firmly. */
+  function markEdges(all, axis, other) {
+    var bins = {};
+    all.forEach(function (a) { var k = Math.round(a[other] / 6); (bins[k] = bins[k] || []).push(a); });
+    Object.keys(bins).forEach(function (k) {
+      var run = bins[k].sort(function (a, b) { return a[axis] - b[axis]; });
+      run.forEach(function (a, i) {
+        if (!i || i === run.length - 1 || a[axis] - run[i - 1][axis] > 16 || run[i + 1][axis] - a[axis] > 16) a.edge = 1;
+      });
+    });
+  }
+  function prepareDots(u) {
+    var r = rng(5150), d = { foot: [], footEdge: [], soil: [], ground: [], tower: [], towerEdge: [] }, solid = [], i;
+    for (i = 0; i + 2 < u.length; i += 3) {
+      var px = u[i], py = u[i + 1], v = Math.min(1.2, 0.6 + u[i + 2] / 320);
+      var y = py <= GROUND_PX ? GROUND + (GROUND_PX - py) * TOWER_K : GROUND - (py - GROUND_PX) * BELOW_K;
+      var dot = [(px - 512) * TOWER_K, y, v, 0];
+      if (Math.abs(py - GROUND_PX) <= 2) d.ground.push(dot);
+      else if (py > GROUND_PX && (px < 205 || px > 815)) d.soil.push(dot);
+      else solid.push({ px: px, py: py, dot: dot, below: py > GROUND_PX, edge: 0 });
+    }
+    markEdges(solid, 'px', 'py'); markEdges(solid, 'py', 'px');
+    solid.forEach(function (s) {
+      s.dot[3] = s.edge;
+      /* Future floors keep their outline but lose part of their interior. */
+      if (!s.below && !s.edge && (s.dot[1] - GROUND) / FLOOR > 45 && r() < 0.46) return;
+      d[(s.below ? 'foot' : 'tower') + (s.edge ? 'Edge' : '')].push(s.dot);
+    });
+    Object.keys(d).forEach(function (key) {
+      for (var a = d[key].length - 1; a > 0; a--) { var b = Math.floor(r() * (a + 1)), s = d[key][a]; d[key][a] = d[key][b]; d[key][b] = s; }
+    });
+    return d;
+  }
+  function nextDot(key) { var list = dots[key]; return list[cursor[key]++ % list.length]; }
+  function dim(c, k) { return [c[0] * k, c[1] * k, c[2] * k]; }
 
   function rng(seed) {
     return function () {
@@ -109,23 +146,25 @@
       var y = Math.max(0, 1.5 * Math.exp(-((x - 0.2 - z * 0.45) * (x - 0.2 - z * 0.45)) / 3.6) + 0.14 * Math.sin(x * 2.2 + z));
       return { p: [x, y * (0.93 + r() * 0.07), z], c: mix(RUST, GOLD, Math.min(1, y / 1.3)) };
     },
-    stairs: function (r) {
-      /* A flat six-step staircase. Positions match the .step elements in the page. */
-      var i = Math.floor(r() * STEPS), x = STAIR_X + STAIR_W * i, v = STAIR_V - STAIR_RISE * i, k = r(), u, y, c;
-      if (k < 0.1) return { p: [(r() - 0.5) * 10, -2, 0], c: mix(RUST, GOLD, r()) };
-      if (k < 0.6) {
-        u = x + r() * STAIR_W; y = v + r() * r() * 0.007; c = mix(AMBER, GOLD, r());
-      } else if (k < 0.74) {
-        u = x + r() * 0.0025; y = v + r() * (i ? STAIR_RISE : 0.97 - v); c = mix(RUST, AMBER, r());
-      } else {
-        u = x + r() * STAIR_W; y = v + Math.pow(r(), 1.5) * (0.97 - v);
-        c = mix(RUST, AMBER, r() * 0.5); c = [c[0] * 0.42, c[1] * 0.42, c[2] * 0.42];
-      }
-      return { p: [(u - 0.5) * 10, (1 - y) * 10, 0], c: c };
+    tower: function (r) {
+      /* One timeline: foundation, ZS, PepsiCo, Masters' Union, stronger foundation, future floors. */
+      var k = r(), o, f, c, d, tone;
+      var foot = function () { return nextDot(r() < 0.34 ? 'footEdge' : 'foot'); };
+      if (k < 0.05) return { p: [(r() - 0.5) * 12, -2, 0], c: mix(RUST, GOLD, r()), d: r() * 13 };
+      if (k < 0.08) { o = nextDot('soil'); return { p: [o[0], o[1], 0], c: dim(mix(RUST, AMBER, r()), 0.3 * o[2]), d: o[1] / GROUND * 2.4 }; }
+      if (k < 0.3) { o = foot(); return { p: [o[0], o[1], 0], c: dim(mix(AMBER, GOLD, r()), (o[3] ? 1.45 : 1) * o[2]), d: o[1] / GROUND * 2.4 }; }
+      if (k < 0.46) { o = foot(); return { p: [o[0], o[1], 0], c: dim(mix(GOLD, PALE, r()), (o[3] ? 1.5 : 1.15) * o[2]), d: 8.6 + r() * 1.6 }; }
+      if (k < 0.49) { o = nextDot('ground'); return { p: [o[0], o[1], 0], c: PALE, d: 2.8 + r() * 0.3 }; }
+      o = nextDot(r() < 0.36 ? 'towerEdge' : 'tower'); f = (o[1] - GROUND) / FLOOR; tone = o[2] * (o[3] ? 1.35 : 0.95);
+      if (f <= 25) { c = mix(AMBER, GOLD, r()); d = 3.4 + f / 25 * 1.8; }
+      else if (f <= 40) { c = mix(GOLD, PALE, r() * 0.6); d = 5.6 + (f - 25) / 15 * 1.6; }
+      else if (f <= 45) { c = PALE; d = 7.6 + (f - 40) / 5 * 0.7; }
+      else { c = mix(GOLD, PALE, r()); tone = o[2] * (o[3] ? 0.6 : 0.42); d = 10.6 + (f - 45) / 200 * 4; }
+      return { p: [o[0], o[1], 0], c: dim(c, tone), d: d };
     }
   };
   /* Flat forms use screen-shaped coordinates. Rest is how much light streak stays once settled. */
-  var REST = { name: 0, stairs: 0.35 }, FLAT_VP = [2.8, 0, 0, 0, 0, 2.8, 0, 0, 0, 0, 0, 0, 0, -14, 0, 14];
+  var REST = { landing: 0, tower: 0 }, flatVP = [2.8, 0, 0, 0, 0, 2.8, 0, 0, 0, 0, 0, 0, 0, -14, 0, 14];
 
   var LABELS = {
     heaps: [[-2.65, 2.2, 0, 'ZS'], [0.05, 1.65, 0, 'PepsiCo'], [2.6, 1.25, 0, 'RecoveryCo']],
@@ -139,10 +178,10 @@
   };
 
   var VS = '#version 300 es\nprecision highp float;' +
-    'in float aEnd;in vec3 aA,aB,aCA,aCB;in vec4 aR;' +
-    'uniform mat4 uVP;uniform vec2 uShift;uniform float uT,uClock,uPx,uLine,uLight,uRest;out vec4 vC;' +
+    'in float aEnd,aD;in vec3 aA,aB,aCA,aCB;in vec4 aR;' +
+    'uniform mat4 uVP;uniform vec2 uShift;uniform float uT,uClock,uPx,uLine,uLight,uRest,uTint,uMin;out vec4 vC;' +
     'void main(){' +
-    'float ld=.55+aR.y*.55,st=ld*.8+aR.x*1.25,fd=.85+aR.z*.45;' +
+    'float ld=.55+aR.y*.55,st=ld*.8+aR.x*1.25+aD,fd=.85+aR.z*.45;' +
     'float l=clamp(uT/ld,0.,1.),a=clamp((uT-st)/fd,0.,1.),H=6.5+aR.w*5.+(aB.y<-.5?14.:0.);' +
     'vec3 p,c;float al;' +
     'if(a<=0.){p=aA;p.y-=7.*l*l;al=1.-l;c=aCA;}' +
@@ -157,18 +196,18 @@
     'else s=0.;}' +
     'al*=s*(1.-aEnd*.96);if(uLight>.5)al*=.38;}' +
     'gl_Position=uVP*vec4(p,1.);gl_Position.xy+=uShift*gl_Position.w;' +
-    'gl_PointSize=clamp(uPx*(.75+aR.y*.8)/gl_Position.w,1.,3.6);' +
-    'if(uLight>.5)c=c*.58;' +
+    'gl_PointSize=clamp(uPx*(.75+aR.y*.8)/gl_Position.w,uMin,3.6);' +
+    'c*=uTint;' +
     'vC=vec4(c,al);}';
-  var FS = '#version 300 es\nprecision highp float;in vec4 vC;uniform float uLine,uLight;out vec4 o;' +
+  var FS = '#version 300 es\nprecision highp float;in vec4 vC;uniform float uLine,uLight,uBright;out vec4 o;' +
     'void main(){float k=1.;if(uLine<.5){vec2 d=gl_PointCoord-.5;k=1.-smoothstep(.22,.5,length(d));}' +
-    'o=vec4(vC.rgb,vC.a*k*(uLine>.5?1.:(uLight>.5?.82:.62)));}';
+    'o=vec4(vC.rgb,vC.a*k*(uLine>.5?1.:(uLight>.5?.82:uBright)));}';
 
   var gl, prog, U = {}, buf = {}, vao, n = 0, nLines = 0, cache = {};
-  var A, B, CA, CB, R;
+  var A, B, CA, CB, R, D, form = '', hook = null;
   var tStart = 0, canvas, light = true, reduce = false, raf = 0, shift = [0, 0], labelsEl, activeLabels = [], labelNodes = [];
   var quality = 1, dprCap = 1.75, lastFrame = 0, frameSum = 0, frameN = 0;
-  var mouse = [0, 0], mouseS = [0, 0], vp = new Float32Array(16), dist = 12.5, flatMix = 0, flatGoal = 0, rest = 1;
+  var mouse = [0, 0], mouseS = [0, 0], vp = new Float32Array(16), dist = 12.5, flatMix = 0, flatGoal = 0, rest = 1, lastClock = 0;
 
   function shader(type, src) {
     var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
@@ -184,20 +223,22 @@
   }
   function build(name) {
     if (cache[name]) return cache[name];
-    var r = rng(name.length * 7919 + name.charCodeAt(0) * 31), pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
+    var r = rng(name.length * 7919 + name.charCodeAt(0) * 31), pos = new Float32Array(n * 3), col = new Float32Array(n * 3), del = new Float32Array(n);
     var f = FORMS[name], i, s;
     for (i = 0; i < n; i++) {
       s = f(r);
       pos[i * 3] = s.p[0]; pos[i * 3 + 1] = s.p[1]; pos[i * 3 + 2] = s.p[2];
       var v = 0.72 + r() * 0.42;
       col[i * 3] = s.c[0] * v; col[i * 3 + 1] = s.c[1] * v; col[i * 3 + 2] = s.c[2] * v;
+      /* Staged forms start each grain at its own time instead of the shared random start. */
+      if (s.d !== undefined) del[i] = s.d + 0.5 + R[i * 4 + 3] * 0.35 - ((0.55 + R[i * 4 + 1] * 0.55) * 0.8 + R[i * 4] * 1.25);
     }
-    return (cache[name] = { pos: pos, col: col });
+    return (cache[name] = { pos: pos, col: col, del: del });
   }
   /* Where every grain is right now, so a page change can interrupt a fall cleanly. */
   function snapshot(T) {
     for (var i = 0; i < n; i++) {
-      var j = i * 3, q = i * 4, ld = .55 + R[q + 1] * .55, st = ld * .8 + R[q] * 1.25, fd = .85 + R[q + 2] * .45;
+      var j = i * 3, q = i * 4, ld = .55 + R[q + 1] * .55, st = ld * .8 + R[q] * 1.25 + D[i], fd = .85 + R[q + 2] * .45;
       var l = Math.min(1, Math.max(0, T / ld)), a = Math.min(1, Math.max(0, (T - st) / fd));
       if (a <= 0) { A[j + 1] -= 7 * l * l; }
       else {
@@ -256,16 +297,30 @@
     var eye = [Math.sin(yaw) * Math.cos(pitch) * dist, 1.2 + Math.sin(pitch) * dist, Math.cos(yaw) * Math.cos(pitch) * dist];
     mul(persp(0.62, asp, 0.1, 80), lookAt(eye, [0, 1.15, 0]));
     /* Ease between the 3D camera and the flat view used by the name and staircase. */
-    flatMix = reduce ? flatGoal : flatMix + (flatGoal - flatMix) * 0.09;
+    var ease = 1 - Math.exp(-Math.min(0.25, Math.max(0, clock - lastClock)) * 5.7); lastClock = clock;
+    flatMix = reduce ? flatGoal : flatMix + (flatGoal - flatMix) * ease;
     if (Math.abs(flatGoal - flatMix) < 0.002) flatMix = flatGoal;
-    for (var m = 0; m < 16; m++) vp[m] += (FLAT_VP[m] - vp[m]) * flatMix;
+    /* The tower keeps true proportions, starts close, then pulls back as it grows. */
+    var goalX = 2.8, goalY = 2.8, goalO = -14, cw = canvas.clientWidth, ch = canvas.clientHeight;
+    if (form === 'tower') {
+      var narrow = cw < 700, zEnd = narrow ? 0.82 : 1, lift = narrow ? 1.45 : 0;
+      var z0 = narrow ? zEnd * 1.22 : Math.max(1.3, Math.min(1.7, (cw / 2 - 205) / (2.1 * ch / 10)));
+      var zk = Math.min(1, Math.max(0, (T - 10.9) / 4.5)), zoom = z0 + (zEnd - z0) * zk * zk * (3 - 2 * zk);
+      goalX = 2.8 * zoom / asp; goalY = 2.8 * zoom; goalO = 2.8 * lift - 14;
+    }
+    flatVP[0] = reduce ? goalX : flatVP[0] + (goalX - flatVP[0]) * ease;
+    flatVP[5] = reduce ? goalY : flatVP[5] + (goalY - flatVP[5]) * ease;
+    flatVP[13] = reduce ? goalO : flatVP[13] + (goalO - flatVP[13]) * ease;
+    for (var m = 0; m < 16; m++) vp[m] += (flatVP[m] - vp[m]) * flatMix;
+    if (form === 'tower' && hook) hook(T, flatVP[5] / 2.8 * ch / 10, (flatVP[13] + 14) / 2.8 * ch / 10);
 
     gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
     gl.enable(gl.BLEND);
     if (light) gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     else gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE, gl.ZERO, gl.ONE);
     gl.uniformMatrix4fv(U.uVP, false, vp); gl.uniform2f(U.uShift, shift[0] * (1 - flatMix), shift[1] * (1 - flatMix));
-    gl.uniform1f(U.uRest, rest);
+    gl.uniform1f(U.uMin, form === 'tower' ? Math.max(1.35, canvas.height / canvas.clientHeight) : 1); gl.uniform1f(U.uBright, form === 'tower' ? 0.98 : 0.62);
+    gl.uniform1f(U.uRest, rest); gl.uniform1f(U.uTint, form === 'landing' || !light ? 1 : 0.58);
     gl.uniform1f(U.uT, T); gl.uniform1f(U.uClock, clock); gl.uniform1f(U.uLight, light ? 1 : 0);
     gl.uniform1f(U.uPx, canvas.height / 330);
     gl.uniform1f(U.uLine, 1); gl.drawArraysInstanced(gl.LINES, 0, 2, Math.floor(nLines * quality * (light ? 0.3 : 1)));
@@ -282,55 +337,70 @@
     }
   }
 
-  /* Sample the heading's real letter shapes so grains land exactly on the name. */
-  function writeName(el) {
+  /* Sample every landing item (words, photo, button) so grains land on its real shape and colour. */
+  function writeLanding(el) {
     if (!gl) return false;
     var box = canvas.getBoundingClientRect(), W = Math.ceil(box.width), H = Math.ceil(box.height);
     if (!W || !H) return false;
-    var off = document.createElement('canvas'); off.width = W; off.height = H;
-    var ctx = off.getContext('2d', { willReadFrequently: true }), tones = [];
-    var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), node;
-    ctx.textBaseline = 'alphabetic';
+    var make = function () { var o = document.createElement('canvas'); o.width = W; o.height = H; return o.getContext('2d', { willReadFrequently: true }); };
+    var type = make(), solid = make(), walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), node;
+    el.querySelectorAll('img').forEach(function (im) {
+      var b = im.getBoundingClientRect();
+      if (!im.complete || !im.naturalWidth || !b.width) return;
+      var s = Math.max(b.width / im.naturalWidth, b.height / im.naturalHeight), sw = b.width / s, sh = b.height / s;
+      solid.drawImage(im, (im.naturalWidth - sw) * 0.5, (im.naturalHeight - sh) * 0.16, sw, sh, b.left - box.left, b.top - box.top, b.width, b.height);
+    });
+    el.querySelectorAll('button').forEach(function (bt) {
+      var bg = getComputedStyle(bt).backgroundColor, b = bt.getBoundingClientRect();
+      if (bg.indexOf('20, 17, 12') > -1) { solid.fillStyle = bg; solid.fillRect(b.left - box.left, b.top - box.top, b.width, b.height); }
+    });
+    type.textBaseline = 'alphabetic';
     while ((node = walker.nextNode())) {
-      var text = node.textContent.trim();
-      if (!text) continue;
-      var start = node.textContent.indexOf(text), range = document.createRange();
-      range.setStart(node, start); range.setEnd(node, start + text.length);
-      var rect = range.getBoundingClientRect(), st = getComputedStyle(node.parentElement);
-      ctx.font = st.fontStyle + ' ' + st.fontWeight + ' ' + st.fontSize + ' ' + st.fontFamily;
-      if ('letterSpacing' in ctx) ctx.letterSpacing = st.letterSpacing;
-      var tone = st.color.match(/[\d.]+/g).slice(0, 3).map(function (v) { return Math.min(1, v / 255 / 0.58); });
-      tones.push({ top: rect.top - box.top, bottom: rect.bottom - box.top, c: tone });
-      ctx.fillStyle = '#000';
-      ctx.fillText(text, rect.left - box.left, rect.top - box.top + ctx.measureText(text).fontBoundingBoxAscent);
-    }
-    var data = ctx.getImageData(0, 0, W, H).data, spots = [], x, y;
-    for (y = 0; y < H; y++) for (x = 0; x < W; x++) if (data[(y * W + x) * 4 + 3] > 120) spots.push(x, y);
-    if (!spots.length) return false;
-    var r = rng(9173), pos = new Float32Array(n * 3), col = new Float32Array(n * 3), count = spots.length / 2;
-    for (var i = 0; i < n; i++) {
-      var j = i * 3, c, v = 0.78 + r() * 0.34;
-      if (r() < 0.66) {
-        var q = Math.floor(r() * count), px = spots[q * 2] + r(), py = spots[q * 2 + 1] + r();
-        pos[j] = (px / W - 0.5) * 10; pos[j + 1] = (1 - py / H) * 10;
-        c = tones[0].c;
-        for (var t = 0; t < tones.length; t++) if (py >= tones[t].top && py <= tones[t].bottom) c = tones[t].c;
-      } else {
-        pos[j] = (r() - 0.5) * 10; pos[j + 1] = -2; c = mix(RUST, GOLD, r());
+      var st = getComputedStyle(node.parentElement), raw = node.textContent, re = /\S+/g, word;
+      type.font = st.fontStyle + ' ' + st.fontWeight + ' ' + st.fontSize + ' ' + st.fontFamily;
+      if ('letterSpacing' in type) type.letterSpacing = st.letterSpacing === 'normal' ? '0px' : st.letterSpacing;
+      type.fillStyle = st.color;
+      while ((word = re.exec(raw))) {
+        var range = document.createRange();
+        range.setStart(node, word.index); range.setEnd(node, word.index + word[0].length);
+        var rect = range.getBoundingClientRect();
+        if (!rect.width) continue;
+        var text = st.textTransform === 'uppercase' ? word[0].toUpperCase() : word[0];
+        type.fillText(text, rect.left - box.left, rect.top - box.top + type.measureText(text).fontBoundingBoxAscent);
       }
-      col[j] = c[0] * v; col[j + 1] = c[1] * v; col[j + 2] = c[2] * v;
     }
-    cache.name = { pos: pos, col: col };
+    var td = type.getImageData(0, 0, W, H).data, sd = solid.getImageData(0, 0, W, H).data, ink = [], fill = [], x, y, p;
+    for (y = 0; y < H; y++) for (x = 0; x < W; x++) {
+      p = (y * W + x) * 4;
+      if (td[p + 3] > 110) ink.push(p); else if (sd[p + 3] > 110) fill.push(p);
+    }
+    if (!ink.length) return false;
+    var r = rng(9173), pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
+    for (var i = 0; i < n; i++) {
+      var j = i * 3, k = r(), v = 0.88 + r() * 0.2, list = k < 0.42 || !fill.length ? ink : fill, data = list === ink ? td : sd;
+      if (k < 0.76) {
+        var at = list[Math.floor(r() * list.length)], px = at / 4 % W, py = Math.floor(at / 4 / W);
+        pos[j] = ((px + r()) / W - 0.5) * 10; pos[j + 1] = (1 - (py + r()) / H) * 10;
+        col[j] = data[at] / 255 * v; col[j + 1] = data[at + 1] / 255 * v; col[j + 2] = data[at + 2] / 255 * v;
+      } else {
+        var c = dim(mix(RUST, GOLD, r()), 0.7);
+        pos[j] = (r() - 0.5) * 10; pos[j + 1] = -2; col[j] = c[0]; col[j + 1] = c[1]; col[j + 2] = c[2];
+      }
+    }
+    cache.landing = { pos: pos, col: col, del: new Float32Array(n) };
     return true;
   }
 
   function to(name, instant) {
     if (!gl) return;
+    if (name === 'tower' && !dots) { towerWaiting = true; return; }
+    towerWaiting = false;
     var now = performance.now() / 1000, T = now - tStart, f = build(name);
     snapshot(T);
-    B.set(f.pos); CB.set(f.col);
-    upload('aA', A); upload('aCA', CA); upload('aB', B); upload('aCB', CB);
-    tStart = instant ? now - 9 : now;
+    B.set(f.pos); CB.set(f.col); D.set(f.del);
+    upload('aA', A); upload('aCA', CA); upload('aB', B); upload('aCB', CB); upload('aD', D);
+    tStart = instant ? now - 30 : now;
+    form = name;
     flatGoal = name in REST ? 1 : 0;
     rest = name in REST ? REST[name] : 1;
     labelsEl.textContent = ''; labelNodes = [];
@@ -350,24 +420,28 @@
     gl.linkProgram(prog);
     if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
     gl.useProgram(prog);
-    ['uVP', 'uShift', 'uT', 'uClock', 'uPx', 'uLine', 'uLight', 'uRest'].forEach(function (u) { U[u] = gl.getUniformLocation(prog, u); });
+    ['uVP', 'uShift', 'uT', 'uClock', 'uPx', 'uLine', 'uLight', 'uRest', 'uTint', 'uMin', 'uBright'].forEach(function (u) { U[u] = gl.getUniformLocation(prog, u); });
     var small = Math.min(innerWidth, innerHeight) < 620;
     n = small ? 24000 : 62000; nLines = small ? 3200 : 9500;
-    A = new Float32Array(n * 3); B = new Float32Array(n * 3); CA = new Float32Array(n * 3); CB = new Float32Array(n * 3); R = new Float32Array(n * 4);
+    A = new Float32Array(n * 3); B = new Float32Array(n * 3); CA = new Float32Array(n * 3); CB = new Float32Array(n * 3); R = new Float32Array(n * 4); D = new Float32Array(n);
     var r = rng(4242), i;
     for (i = 0; i < n * 4; i++) R[i] = r();
     for (i = 0; i < n; i++) A[i * 3 + 1] = -20;
     vao = gl.createVertexArray(); gl.bindVertexArray(vao);
     attr('aEnd', 1, new Float32Array([0, 1]), 0);
-    attr('aA', 3, A, 1); attr('aB', 3, B, 1); attr('aCA', 3, CA, 1); attr('aCB', 3, CB, 1); attr('aR', 4, R, 1);
+    attr('aA', 3, A, 1); attr('aB', 3, B, 1); attr('aCA', 3, CA, 1); attr('aCB', 3, CB, 1); attr('aR', 4, R, 1); attr('aD', 1, D, 1);
     tStart = performance.now() / 1000 - 9;
     addEventListener('pointermove', function (e) { mouse = [e.clientX / innerWidth - 0.5, e.clientY / innerHeight - 0.5]; }, { passive: true });
     document.addEventListener('visibilitychange', function () {
       cancelAnimationFrame(raf); if (!document.hidden) raf = requestAnimationFrame(frame);
     });
+    fetch('assets/tower-points.bin').then(function (x) { if (!x.ok) throw new Error('tower'); return x.arrayBuffer(); }).then(function (b) {
+      dots = prepareDots(new Uint16Array(b));
+      if (towerWaiting) to('tower');
+    }).catch(function () {});
     raf = requestAnimationFrame(frame);
     return true;
   }
 
-  window.Sand = { init: init, to: to, writeName: writeName, setLight: function (v) { light = v; }, stats: function () { return { quality: quality, dpr: dprCap, grains: Math.floor(n * quality) }; } };
+  window.Sand = { init: init, to: to, writeLanding: writeLanding, onTower: function (fn) { hook = fn; }, setLight: function (v) { light = v; }, stats: function () { return { quality: quality, dpr: dprCap, grains: Math.floor(n * quality) }; } };
 })();

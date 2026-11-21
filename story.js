@@ -9,15 +9,23 @@
   var hasSand = false;
   try { hasSand = window.Sand && Sand.init($('#sand'), $('#labels')); } catch (e) { hasSand = false; }
   if (!hasSand) root.classList.add('no-sand');
-  var title = $('.l-main h1'), rains = hasSand && !matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (rains) root.classList.add('name-waits');
+  var rains = hasSand && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (rains) root.classList.add('land-waits');
 
-  /* Rain sand onto the name. The sharp heading fades in once the grains have landed. */
-  function rainName(instant) {
+  /* Rain sand onto every landing item. The sharp version fades in once the grains have landed. */
+  function rainLanding(instant) {
     if (!hasSand) return;
-    Sand.to(Sand.writeName(title) ? 'name' : 'dune', instant);
-    if (rains && !instant) { root.classList.remove('name-rains'); void title.offsetWidth; root.classList.add('name-rains'); }
+    Sand.to(Sand.writeLanding(landing) ? 'landing' : 'dune', instant);
+    if (rains && !instant) { root.classList.remove('land-rains'); void landing.offsetWidth; root.classList.add('land-rains'); }
   }
+
+  /* Tower overlay: floor markers follow the zoom and appear as each stage lands. */
+  var tower = $('.tower'), marks = $$('[data-at]', tower);
+  if (hasSand) Sand.onTower(function (T, unit, lift) {
+    tower.style.setProperty('--u', unit.toFixed(2) + 'px');
+    tower.style.setProperty('--o', lift.toFixed(2) + 'px');
+    marks.forEach(function (m) { m.classList.toggle('on', T >= +m.dataset.at); });
+  });
 
   pages.forEach(function (p, i) {
     $$('.r', p).forEach(function (el, k) { el.style.setProperty('--i', k); });
@@ -66,7 +74,7 @@
     closeDrawer();
     root.classList.remove('is-story');
     landing.inert = false; story.inert = true;
-    if (hasSand) { Sand.setLight(true); rainName(); }
+    if (hasSand) { Sand.setLight(true); rainLanding(); }
   }
   function route() {
     var m = /^#strategy(?:\/(\d+))?$/.exec(location.hash);
@@ -146,14 +154,16 @@
   addEventListener('hashchange', route);
   route();
   if (hasSand) {
-    /* Wait for the display font so the grains match the real letters. */
-    var wait = new Promise(function (ok) { setTimeout(ok, 1800); });
-    var fonts = document.fonts ? Promise.all([document.fonts.load('100px "Instrument Serif"'), document.fonts.load('italic 100px "Instrument Serif"')]) : wait;
-    Promise.race([fonts, wait]).then(function () { if (!inStory) rainName(); else root.classList.add('name-rains'); }, function () { if (!inStory) rainName(); });
+    /* Wait for fonts and the photo so the grains match what they become. */
+    var wait = new Promise(function (ok) { setTimeout(ok, 1800); }), photo = $('.l-photo img');
+    var quiet = function (p) { return p.catch(function () {}); };
+    var ready = Promise.all([quiet(document.fonts.load('100px "Instrument Serif"')), quiet(document.fonts.load('italic 100px "Instrument Serif"')),
+      quiet(document.fonts.load('500 12px "Geist Mono"')), quiet(document.fonts.load('400 16px "Geist"')), quiet(photo.decode())]);
+    Promise.race([ready, wait]).then(function () { if (!inStory) rainLanding(); else root.classList.add('land-rains'); });
     var resizeTimer = 0;
     addEventListener('resize', function () {
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(function () { if (!inStory) rainName(true); }, 180);
+      resizeTimer = setTimeout(function () { if (!inStory) rainLanding(true); }, 180);
     });
   }
   requestAnimationFrame(function () { root.classList.add('ready'); });
