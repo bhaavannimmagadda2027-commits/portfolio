@@ -9,6 +9,15 @@
   var hasSand = false;
   try { hasSand = window.Sand && Sand.init($('#sand'), $('#labels')); } catch (e) { hasSand = false; }
   if (!hasSand) root.classList.add('no-sand');
+  var title = $('.l-main h1'), rains = hasSand && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (rains) root.classList.add('name-waits');
+
+  /* Rain sand onto the name. The sharp heading fades in once the grains have landed. */
+  function rainName(instant) {
+    if (!hasSand) return;
+    Sand.to(Sand.writeName(title) ? 'name' : 'dune', instant);
+    if (rains && !instant) { root.classList.remove('name-rains'); void title.offsetWidth; root.classList.add('name-rains'); }
+  }
 
   pages.forEach(function (p, i) {
     $$('.r', p).forEach(function (el, k) { el.style.setProperty('--i', k); });
@@ -57,7 +66,7 @@
     closeDrawer();
     root.classList.remove('is-story');
     landing.inert = false; story.inert = true;
-    if (hasSand) { Sand.setLight(true); Sand.to('dune'); }
+    if (hasSand) { Sand.setLight(true); rainName(); }
   }
   function route() {
     var m = /^#strategy(?:\/(\d+))?$/.exec(location.hash);
@@ -134,8 +143,18 @@
   viewer.addEventListener('click', function (e) { if (e.target === viewer) viewer.close(); });
 
   story.inert = true; drawer.inert = true;
-  if (hasSand) Sand.to('dune');
   addEventListener('hashchange', route);
   route();
+  if (hasSand) {
+    /* Wait for the display font so the grains match the real letters. */
+    var wait = new Promise(function (ok) { setTimeout(ok, 1800); });
+    var fonts = document.fonts ? Promise.all([document.fonts.load('100px "Instrument Serif"'), document.fonts.load('italic 100px "Instrument Serif"')]) : wait;
+    Promise.race([fonts, wait]).then(function () { if (!inStory) rainName(); else root.classList.add('name-rains'); }, function () { if (!inStory) rainName(); });
+    var resizeTimer = 0;
+    addEventListener('resize', function () {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function () { if (!inStory) rainName(true); }, 180);
+    });
+  }
   requestAnimationFrame(function () { root.classList.add('ready'); });
 })();

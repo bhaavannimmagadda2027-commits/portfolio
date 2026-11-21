@@ -3,6 +3,7 @@
   var TAU = Math.PI * 2;
   var AMBER = [0.86, 0.52, 0.18], GOLD = [0.96, 0.76, 0.46], RUST = [0.58, 0.27, 0.1],
       STEEL = [0.4, 0.62, 0.74], PALE = [0.93, 0.89, 0.8];
+  var STEPS = 6, STAIR_X = 0.05, STAIR_W = 0.15, STAIR_V = 0.76, STAIR_RISE = 0.1;
 
   function rng(seed) {
     return function () {
@@ -107,8 +108,24 @@
       var x = (r() - 0.5) * 12, z = -2.6 + r() * 5;
       var y = Math.max(0, 1.5 * Math.exp(-((x - 0.2 - z * 0.45) * (x - 0.2 - z * 0.45)) / 3.6) + 0.14 * Math.sin(x * 2.2 + z));
       return { p: [x, y * (0.93 + r() * 0.07), z], c: mix(RUST, GOLD, Math.min(1, y / 1.3)) };
+    },
+    stairs: function (r) {
+      /* A flat six-step staircase. Positions match the .step elements in the page. */
+      var i = Math.floor(r() * STEPS), x = STAIR_X + STAIR_W * i, v = STAIR_V - STAIR_RISE * i, k = r(), u, y, c;
+      if (k < 0.1) return { p: [(r() - 0.5) * 10, -2, 0], c: mix(RUST, GOLD, r()) };
+      if (k < 0.6) {
+        u = x + r() * STAIR_W; y = v + r() * r() * 0.007; c = mix(AMBER, GOLD, r());
+      } else if (k < 0.74) {
+        u = x + r() * 0.0025; y = v + r() * (i ? STAIR_RISE : 0.97 - v); c = mix(RUST, AMBER, r());
+      } else {
+        u = x + r() * STAIR_W; y = v + Math.pow(r(), 1.5) * (0.97 - v);
+        c = mix(RUST, AMBER, r() * 0.5); c = [c[0] * 0.42, c[1] * 0.42, c[2] * 0.42];
+      }
+      return { p: [(u - 0.5) * 10, (1 - y) * 10, 0], c: c };
     }
   };
+  /* Flat forms use screen-shaped coordinates. Rest is how much light streak stays once settled. */
+  var REST = { name: 0, stairs: 0.35 }, FLAT_VP = [2.8, 0, 0, 0, 0, 2.8, 0, 0, 0, 0, 0, 0, 0, -14, 0, 14];
 
   var LABELS = {
     heaps: [[-2.65, 2.2, 0, 'ZS'], [0.05, 1.65, 0, 'PepsiCo'], [2.6, 1.25, 0, 'RecoveryCo']],
@@ -123,10 +140,10 @@
 
   var VS = '#version 300 es\nprecision highp float;' +
     'in float aEnd;in vec3 aA,aB,aCA,aCB;in vec4 aR;' +
-    'uniform mat4 uVP;uniform vec2 uShift;uniform float uT,uClock,uPx,uLine,uLight;out vec4 vC;' +
+    'uniform mat4 uVP;uniform vec2 uShift;uniform float uT,uClock,uPx,uLine,uLight,uRest;out vec4 vC;' +
     'void main(){' +
     'float ld=.55+aR.y*.55,st=ld*.8+aR.x*1.25,fd=.85+aR.z*.45;' +
-    'float l=clamp(uT/ld,0.,1.),a=clamp((uT-st)/fd,0.,1.),H=6.5+aR.w*5.;' +
+    'float l=clamp(uT/ld,0.,1.),a=clamp((uT-st)/fd,0.,1.),H=6.5+aR.w*5.+(aB.y<-.5?14.:0.);' +
     'vec3 p,c;float al;' +
     'if(a<=0.){p=aA;p.y-=7.*l*l;al=1.-l;c=aCA;}' +
     'else{p=aB;p.y+=H*(1.-a*a);p.xz+=(aR.yz-.5)*.14*(1.-a);al=smoothstep(0.,.16,a);c=aCB;' +
@@ -135,8 +152,8 @@
     'if(a<=0.){p+=vec3(0.,aEnd*(.5+1.6*aR.w)*l,0.);s=.14;}' +
     'else if(a<1.){p.y+=aEnd*(1.1+3.4*aR.w)*(1.-a*.5);s=.34;}' +
     'else{float e=exp(-max(uT-st-fd,0.)*.85);' +
-    'if(aR.y<.34){p.y+=aEnd*(4.+7.*aR.w)*(.55+.45*e);s=.042+.16*e;}' +
-    'else if(aR.x<.42){float g=aEnd*(2.+7.*aR.z)*(aR.w<.5?-1.:1.);if(aR.z<.5)p.x+=g;else p.z+=g*.8;s=.03+.1*e;}' +
+    'if(aR.y<.34){p.y+=aEnd*(4.+7.*aR.w)*(.55+.45*e);s=.042*uRest+.16*e;}' +
+    'else if(aR.x<.42){float g=aEnd*(2.+7.*aR.z)*(aR.w<.5?-1.:1.);if(aR.z<.5)p.x+=g;else p.z+=g*.8;s=.03*uRest+.1*e;}' +
     'else s=0.;}' +
     'al*=s*(1.-aEnd*.96);if(uLight>.5)al*=.38;}' +
     'gl_Position=uVP*vec4(p,1.);gl_Position.xy+=uShift*gl_Position.w;' +
@@ -151,7 +168,7 @@
   var A, B, CA, CB, R;
   var tStart = 0, canvas, light = true, reduce = false, raf = 0, shift = [0, 0], labelsEl, activeLabels = [], labelNodes = [];
   var quality = 1, dprCap = 1.75, lastFrame = 0, frameSum = 0, frameN = 0;
-  var mouse = [0, 0], mouseS = [0, 0], vp = new Float32Array(16), dist = 12.5;
+  var mouse = [0, 0], mouseS = [0, 0], vp = new Float32Array(16), dist = 12.5, flatMix = 0, flatGoal = 0, rest = 1;
 
   function shader(type, src) {
     var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
@@ -184,7 +201,7 @@
       var l = Math.min(1, Math.max(0, T / ld)), a = Math.min(1, Math.max(0, (T - st) / fd));
       if (a <= 0) { A[j + 1] -= 7 * l * l; }
       else {
-        A[j] = B[j]; A[j + 1] = B[j + 1] + (6.5 + R[q + 3] * 5) * (1 - a * a); A[j + 2] = B[j + 2];
+        A[j] = B[j]; A[j + 1] = B[j + 1] + (6.5 + R[q + 3] * 5 + (B[j + 1] < -0.5 ? 14 : 0)) * (1 - a * a); A[j + 2] = B[j + 2];
         CA[j] = CB[j]; CA[j + 1] = CB[j + 1]; CA[j + 2] = CB[j + 2];
       }
     }
@@ -238,12 +255,17 @@
     var pitch = 0.27 + mouseS[1] * 0.05;
     var eye = [Math.sin(yaw) * Math.cos(pitch) * dist, 1.2 + Math.sin(pitch) * dist, Math.cos(yaw) * Math.cos(pitch) * dist];
     mul(persp(0.62, asp, 0.1, 80), lookAt(eye, [0, 1.15, 0]));
+    /* Ease between the 3D camera and the flat view used by the name and staircase. */
+    flatMix = reduce ? flatGoal : flatMix + (flatGoal - flatMix) * 0.09;
+    if (Math.abs(flatGoal - flatMix) < 0.002) flatMix = flatGoal;
+    for (var m = 0; m < 16; m++) vp[m] += (FLAT_VP[m] - vp[m]) * flatMix;
 
     gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
     gl.enable(gl.BLEND);
     if (light) gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     else gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE, gl.ZERO, gl.ONE);
-    gl.uniformMatrix4fv(U.uVP, false, vp); gl.uniform2f(U.uShift, shift[0], shift[1]);
+    gl.uniformMatrix4fv(U.uVP, false, vp); gl.uniform2f(U.uShift, shift[0] * (1 - flatMix), shift[1] * (1 - flatMix));
+    gl.uniform1f(U.uRest, rest);
     gl.uniform1f(U.uT, T); gl.uniform1f(U.uClock, clock); gl.uniform1f(U.uLight, light ? 1 : 0);
     gl.uniform1f(U.uPx, canvas.height / 330);
     gl.uniform1f(U.uLine, 1); gl.drawArraysInstanced(gl.LINES, 0, 2, Math.floor(nLines * quality * (light ? 0.3 : 1)));
@@ -260,13 +282,57 @@
     }
   }
 
-  function to(name) {
+  /* Sample the heading's real letter shapes so grains land exactly on the name. */
+  function writeName(el) {
+    if (!gl) return false;
+    var box = canvas.getBoundingClientRect(), W = Math.ceil(box.width), H = Math.ceil(box.height);
+    if (!W || !H) return false;
+    var off = document.createElement('canvas'); off.width = W; off.height = H;
+    var ctx = off.getContext('2d', { willReadFrequently: true }), tones = [];
+    var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), node;
+    ctx.textBaseline = 'alphabetic';
+    while ((node = walker.nextNode())) {
+      var text = node.textContent.trim();
+      if (!text) continue;
+      var start = node.textContent.indexOf(text), range = document.createRange();
+      range.setStart(node, start); range.setEnd(node, start + text.length);
+      var rect = range.getBoundingClientRect(), st = getComputedStyle(node.parentElement);
+      ctx.font = st.fontStyle + ' ' + st.fontWeight + ' ' + st.fontSize + ' ' + st.fontFamily;
+      if ('letterSpacing' in ctx) ctx.letterSpacing = st.letterSpacing;
+      var tone = st.color.match(/[\d.]+/g).slice(0, 3).map(function (v) { return Math.min(1, v / 255 / 0.58); });
+      tones.push({ top: rect.top - box.top, bottom: rect.bottom - box.top, c: tone });
+      ctx.fillStyle = '#000';
+      ctx.fillText(text, rect.left - box.left, rect.top - box.top + ctx.measureText(text).fontBoundingBoxAscent);
+    }
+    var data = ctx.getImageData(0, 0, W, H).data, spots = [], x, y;
+    for (y = 0; y < H; y++) for (x = 0; x < W; x++) if (data[(y * W + x) * 4 + 3] > 120) spots.push(x, y);
+    if (!spots.length) return false;
+    var r = rng(9173), pos = new Float32Array(n * 3), col = new Float32Array(n * 3), count = spots.length / 2;
+    for (var i = 0; i < n; i++) {
+      var j = i * 3, c, v = 0.78 + r() * 0.34;
+      if (r() < 0.66) {
+        var q = Math.floor(r() * count), px = spots[q * 2] + r(), py = spots[q * 2 + 1] + r();
+        pos[j] = (px / W - 0.5) * 10; pos[j + 1] = (1 - py / H) * 10;
+        c = tones[0].c;
+        for (var t = 0; t < tones.length; t++) if (py >= tones[t].top && py <= tones[t].bottom) c = tones[t].c;
+      } else {
+        pos[j] = (r() - 0.5) * 10; pos[j + 1] = -2; c = mix(RUST, GOLD, r());
+      }
+      col[j] = c[0] * v; col[j + 1] = c[1] * v; col[j + 2] = c[2] * v;
+    }
+    cache.name = { pos: pos, col: col };
+    return true;
+  }
+
+  function to(name, instant) {
     if (!gl) return;
     var now = performance.now() / 1000, T = now - tStart, f = build(name);
     snapshot(T);
     B.set(f.pos); CB.set(f.col);
     upload('aA', A); upload('aCA', CA); upload('aB', B); upload('aCB', CB);
-    tStart = now;
+    tStart = instant ? now - 9 : now;
+    flatGoal = name in REST ? 1 : 0;
+    rest = name in REST ? REST[name] : 1;
     labelsEl.textContent = ''; labelNodes = [];
     activeLabels = LABELS[name] || [];
     activeLabels.forEach(function (l) {
@@ -284,7 +350,7 @@
     gl.linkProgram(prog);
     if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
     gl.useProgram(prog);
-    ['uVP', 'uShift', 'uT', 'uClock', 'uPx', 'uLine', 'uLight'].forEach(function (u) { U[u] = gl.getUniformLocation(prog, u); });
+    ['uVP', 'uShift', 'uT', 'uClock', 'uPx', 'uLine', 'uLight', 'uRest'].forEach(function (u) { U[u] = gl.getUniformLocation(prog, u); });
     var small = Math.min(innerWidth, innerHeight) < 620;
     n = small ? 24000 : 62000; nLines = small ? 3200 : 9500;
     A = new Float32Array(n * 3); B = new Float32Array(n * 3); CA = new Float32Array(n * 3); CB = new Float32Array(n * 3); R = new Float32Array(n * 4);
@@ -303,5 +369,5 @@
     return true;
   }
 
-  window.Sand = { init: init, to: to, setLight: function (v) { light = v; }, stats: function () { return { quality: quality, dpr: dprCap, grains: Math.floor(n * quality) }; } };
+  window.Sand = { init: init, to: to, writeName: writeName, setLight: function (v) { light = v; }, stats: function () { return { quality: quality, dpr: dprCap, grains: Math.floor(n * quality) }; } };
 })();
