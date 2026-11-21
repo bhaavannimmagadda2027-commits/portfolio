@@ -206,7 +206,7 @@
   var gl, prog, U = {}, buf = {}, vao, n = 0, nLines = 0, cache = {};
   var A, B, CA, CB, R, D, form = '', hook = null;
   var tStart = 0, canvas, light = true, reduce = false, raf = 0, shift = [0, 0], labelsEl, activeLabels = [], labelNodes = [];
-  var quality = 1, dprCap = 1.75, lastFrame = 0, frameSum = 0, frameN = 0;
+  var quality = 1, dprCap = 1.75, lastFrame = 0, frameSum = 0, frameN = 0, goodRuns = 0, holdUntil = 0;
   var mouse = [0, 0], mouseS = [0, 0], vp = new Float32Array(16), dist = 12.5, flatMix = 0, flatGoal = 0, rest = 1, lastClock = 0;
 
   function shader(type, src) {
@@ -277,14 +277,27 @@
     else shift = [0.47, -0.06];
     return asp;
   }
-  /* Draw fewer grains on slower machines so the page stays smooth. */
+  /* Keep motion smooth on slow machines: lower sharpness first, then grains, and recover when frames improve.
+     Hidden or throttled tabs are ignored, and the shapes always keep enough grains to stay readable. */
+  function minQuality() {
+    var need = form === 'tower' ? 22000 : form === 'landing' ? 18000 : 9000;
+    return Math.min(1, need / n);
+  }
   function adapt(now) {
     var dt = now - lastFrame; lastFrame = now;
-    if (dt > 250) return;
+    if (document.hidden || dt > 120) { frameSum = 0; frameN = 0; return; }
     frameSum += dt; frameN++;
     if (frameN < 36) return;
     var avg = frameSum / frameN; frameSum = 0; frameN = 0;
-    if (avg > 26 && quality > 0.16) { quality = Math.max(0.16, quality * 0.68); dprCap = Math.max(1, dprCap * 0.82); }
+    if (avg > 26) {
+      if (dprCap > 1) dprCap = Math.max(1, dprCap * 0.82);
+      else quality = Math.max(0.16, quality * 0.75);
+      goodRuns = 0; holdUntil = now + 10000;
+    } else if (avg < 18.5 && now > holdUntil && ++goodRuns >= 4) {
+      goodRuns = 0;
+      if (quality < 1) quality = Math.min(1, quality * 1.2);
+      else dprCap = Math.min(1.75, dprCap * 1.12);
+    }
   }
   function frame(now) {
     raf = requestAnimationFrame(frame);
@@ -324,7 +337,7 @@
     gl.uniform1f(U.uT, T); gl.uniform1f(U.uClock, clock); gl.uniform1f(U.uLight, light ? 1 : 0);
     gl.uniform1f(U.uPx, canvas.height / 330);
     gl.uniform1f(U.uLine, 1); gl.drawArraysInstanced(gl.LINES, 0, 2, Math.floor(nLines * quality * (light ? 0.3 : 1)));
-    gl.uniform1f(U.uLine, 0); gl.drawArraysInstanced(gl.POINTS, 0, 1, Math.floor(n * quality));
+    gl.uniform1f(U.uLine, 0); gl.drawArraysInstanced(gl.POINTS, 0, 1, Math.floor(n * Math.max(quality, minQuality())));
 
     var show = T > 2.1, W = canvas.clientWidth, H = canvas.clientHeight;
     for (var i = 0; i < labelNodes.length; i++) {
@@ -443,5 +456,5 @@
     return true;
   }
 
-  window.Sand = { init: init, to: to, writeLanding: writeLanding, onTower: function (fn) { hook = fn; }, setLight: function (v) { light = v; }, stats: function () { return { quality: quality, dpr: dprCap, grains: Math.floor(n * quality) }; } };
+  window.Sand = { init: init, to: to, writeLanding: writeLanding, onTower: function (fn) { hook = fn; }, setLight: function (v) { light = v; }, stats: function () { return { quality: quality, dpr: dprCap, grains: Math.floor(n * Math.max(quality, minQuality())) }; } };
 })();
