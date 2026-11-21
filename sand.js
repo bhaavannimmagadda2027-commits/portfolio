@@ -280,7 +280,7 @@
   /* Keep motion smooth on slow machines: lower sharpness first, then grains, and recover when frames improve.
      Hidden or throttled tabs are ignored, and the shapes always keep enough grains to stay readable. */
   function minQuality() {
-    var need = form === 'tower' ? 22000 : form === 'landing' || form === 'timeline' ? 18000 : 9000;
+    var need = form === 'tower' ? 22000 : /^usa/.test(form) ? 30000 : form === 'landing' || form === 'timeline' ? 18000 : 9000;
     return Math.min(1, need / n);
   }
   function adapt(now) {
@@ -332,7 +332,7 @@
     if (light) gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     else gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE, gl.ZERO, gl.ONE);
     gl.uniformMatrix4fv(U.uVP, false, vp); gl.uniform2f(U.uShift, shift[0] * (1 - flatMix), shift[1] * (1 - flatMix));
-    var crisp = form === 'tower' || form === 'timeline';
+    var crisp = form === 'tower' || form === 'timeline' || /^usa/.test(form);
     gl.uniform1f(U.uMin, crisp ? Math.max(1.35, canvas.height / canvas.clientHeight) : 1); gl.uniform1f(U.uBright, crisp ? 0.98 : 0.62);
     gl.uniform1f(U.uRest, rest); gl.uniform1f(U.uTint, form === 'landing' || !light ? 1 : 0.58);
     gl.uniform1f(U.uT, T); gl.uniform1f(U.uClock, clock); gl.uniform1f(U.uLight, light ? 1 : 0);
@@ -402,6 +402,35 @@
       }
     }
     cache.landing = { pos: pos, col: col, del: new Float32Array(n) };
+    return true;
+  }
+
+  /* A form drawn by the page: thin lines on one layer, logos on the other, sampled into grains. */
+  function writeForm(name, draw) {
+    if (!gl) return false;
+    var box = canvas.getBoundingClientRect(), W = Math.ceil(box.width), H = Math.ceil(box.height);
+    if (!W || !H) return false;
+    var make = function () { var o = document.createElement('canvas'); o.width = W; o.height = H; return o.getContext('2d', { willReadFrequently: true }); };
+    var lineC = make(), markC = make();
+    draw(lineC, markC, box);
+    var ld = lineC.getImageData(0, 0, W, H).data, md = markC.getImageData(0, 0, W, H).data, lines = [], marks = [], q;
+    for (q = 3; q < ld.length; q += 4) { if (ld[q] > 60) lines.push(q - 3); if (md[q] > 120) marks.push(q - 3); }
+    if (!lines.length) return false;
+    var r = rng(6203), pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
+    for (var i = 0; i < n; i++) {
+      var j = i * 3, k = r();
+      if (k < 0.22) {
+        var c = dim(mix(RUST, GOLD, r()), 0.7);
+        pos[j] = (r() - 0.5) * 10; pos[j + 1] = -2; col[j] = c[0]; col[j + 1] = c[1]; col[j + 2] = c[2];
+        continue;
+      }
+      var useMark = marks.length && k > 0.56, list = useMark ? marks : lines, data = useMark ? md : ld;
+      var at = list[Math.floor(r() * list.length)], px = at / 4 % W, py = Math.floor(at / 4 / W), v = useMark ? 0.84 : 0.72;
+      pos[j] = ((px + r()) / W - 0.5) * 10; pos[j + 1] = (1 - (py + r()) / H) * 10;
+      col[j] = data[at] / 255 * v; col[j + 1] = data[at + 1] / 255 * v; col[j + 2] = data[at + 2] / 255 * v;
+    }
+    REST[name] = 0;
+    cache[name] = { pos: pos, col: col, del: new Float32Array(n) };
     return true;
   }
 
@@ -519,5 +548,5 @@
     return true;
   }
 
-  window.Sand = { init: init, to: to, writeLanding: writeLanding, writeTimeline: writeTimeline, reveal: reveal, onTower: function (fn) { hook = fn; }, setLight: function (v) { light = v; }, stats: function () { return { quality: quality, dpr: dprCap, grains: Math.floor(n * Math.max(quality, minQuality())) }; } };
+  window.Sand = { init: init, to: to, writeLanding: writeLanding, writeTimeline: writeTimeline, writeForm: writeForm, reveal: reveal, onTower: function (fn) { hook = fn; }, setLight: function (v) { light = v; }, stats: function () { return { quality: quality, dpr: dprCap, grains: Math.floor(n * Math.max(quality, minQuality())) }; } };
 })();

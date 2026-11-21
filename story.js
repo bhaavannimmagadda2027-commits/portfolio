@@ -60,6 +60,76 @@
   tlPage.addEventListener('scroll', function () { tlScrolled = Date.now(); tlUpdate(); }, { passive: true });
   tlLayout();
 
+  /* PepsiCo chapter: five scroll steps on the Census map of the United States. */
+  var usaPage = $('.page-usa'), usaStage = $('.usa-stage', usaPage), usaSvg = $('svg', usaPage), usaCopy = $$('.usa-copy p', usaPage);
+  var usaStep = -1, usaData = null, usaImgs = [], usaDrawn = {}, SVGNS = 'http://www.w3.org/2000/svg';
+  var USA_LOGOS = ['pepsico', 'coca-cola', 'dr-pepper', 'private-label'].map(function (n) { return 'assets/logos/original/' + n + '.png'; });
+  /* Large logos on the first two steps: [brand, x, y, width, height]. */
+  var USA_BIG = [[[0, 470, 292, 240, 270]], [[0, 470, 205, 180, 190], [1, 280, 410, 170, 84], [2, 470, 410, 165, 104], [3, 660, 410, 140, 90]]];
+  function svgEl(tag, attrs, parent) {
+    var e = document.createElementNS(SVGNS, tag);
+    Object.keys(attrs).forEach(function (k) { e.setAttribute(k, attrs[k]); });
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function usaLogo(g, s) { svgEl('image', { href: USA_LOGOS[s[0]], x: s[1] - s[3] / 2, y: s[2] - s[4] / 2, width: s[3], height: s[4] }, g); }
+  function usaBuild() {
+    var b = usaData.box;
+    usaSvg.setAttribute('viewBox', b.join(' '));
+    svgEl('path', { class: 'usa-borders', d: usaData.borders }, usaSvg);
+    svgEl('path', { class: 'usa-nation', d: usaData.nation }, usaSvg);
+    USA_BIG.forEach(function (set, i) { var g = svgEl('g', { class: 'usa-g usa-big usa-s' + i }, usaSvg); set.forEach(function (s) { usaLogo(g, s); }); });
+    ['a', 'b', 'd'].forEach(function (key, i) {
+      var g = svgEl('g', { class: 'usa-g usa-s' + (i + 2) }, usaSvg);
+      usaData.states.forEach(function (st) {
+        if (st.row) {
+          svgEl('line', { class: 'usa-lead', x1: st.x, y1: st.y, x2: st.row[0] - 2, y2: st.row[1] }, g);
+          var label = svgEl('text', { class: 'usa-code', x: st.row[0], y: st.row[1] + 3.5 }, g); label.textContent = st.c;
+        }
+        st[key].forEach(function (s) { usaLogo(g, s); });
+      });
+    });
+  }
+  function usaDraw(step) {
+    return function (line, mark, box) {
+      var r = usaSvg.getBoundingClientRect(), b = usaData.box, k = Math.min(r.width / b[2], r.height / b[3]);
+      var ox = r.left - box.left + (r.width - b[2] * k) / 2 - b[0] * k, oy = r.top - box.top + (r.height - b[3] * k) / 2 - b[1] * k;
+      line.setTransform(k, 0, 0, k, ox, oy); mark.setTransform(k, 0, 0, k, ox, oy);
+      line.lineJoin = 'round'; line.strokeStyle = '#F0C98A';
+      if (step >= 2) { line.lineWidth = 1.2 / k; line.stroke(new Path2D(usaData.borders)); }
+      line.lineWidth = 1.9 / k; line.stroke(new Path2D(usaData.nation));
+      var list = step < 2 ? USA_BIG[step] : [];
+      if (step >= 2) usaData.states.forEach(function (st) {
+        st[['a', 'b', 'd'][step - 2]].forEach(function (s) { list.push(s); });
+        if (st.row) { line.lineWidth = 0.7 / k; line.beginPath(); line.moveTo(st.x, st.y); line.lineTo(st.row[0] - 2, st.row[1]); line.stroke(); }
+      });
+      list.forEach(function (s) {
+        var im = usaImgs[s[0]], f = Math.min(s[3] / im.naturalWidth, s[4] / im.naturalHeight), w = im.naturalWidth * f, h = im.naturalHeight * f;
+        mark.drawImage(im, s[1] - w / 2, s[2] - h / 2, w, h);
+      });
+    };
+  }
+  function usaMax() { return Math.max(1, usaPage.scrollHeight - usaPage.clientHeight); }
+  function usaTop(k) { return k >= 4 ? usaMax() : Math.ceil(usaMax() * k / 5) + 2; }
+  function usaUpdate() {
+    var k = Math.min(4, Math.floor(usaPage.scrollTop / usaMax() * 5));
+    if (usaPage.scrollTop >= usaMax() - 2) k = 4;
+    if (k === usaStep) return;
+    usaStep = k;
+    usaStage.dataset.step = k;
+    usaCopy.forEach(function (c, i) { c.classList.toggle('on', i === k); });
+    if (!usaData || !hasSand) return;
+    var name = 'usa' + k;
+    if (!usaDrawn[name]) usaDrawn[name] = Sand.writeForm(name, usaDraw(k));
+    if (usaDrawn[name]) Sand.to(name);
+  }
+  usaPage.addEventListener('scroll', function () { tlScrolled = Date.now(); usaUpdate(); }, { passive: true });
+  usaImgs = USA_LOGOS.map(function (src) { var im = new Image(); im.src = src; return im; });
+  Promise.all([fetch('assets/map/us-states.json').then(function (x) { return x.json(); })].concat(usaImgs.map(function (im) { return im.decode(); }))).then(function (done) {
+    usaData = done[0]; usaBuild();
+    if (pages[current] === usaPage) { usaStep = -1; usaUpdate(); }
+  }).catch(function () {});
+
   pages.forEach(function (p, i) {
     $$('.r', p).forEach(function (el, k) { el.style.setProperty('--i', k); });
     var b = document.createElement('button');
@@ -81,9 +151,10 @@
       p.setAttribute('aria-hidden', k === i ? 'false' : 'true');
       p.inert = k !== i;
     });
-    var isTl = pages[i] === tlPage;
+    var isTl = pages[i] === tlPage, isUsa = pages[i] === usaPage;
     if (isTl) tlStop = -1;
-    pages[i].scrollTop = isTl && enterAtEnd ? tlMax() : 0;
+    if (isUsa) usaStep = -1;
+    pages[i].scrollTop = enterAtEnd && (isTl || isUsa) ? pages[i].scrollHeight : 0;
     enterAtEnd = false;
     dots.forEach(function (d, k) {
       d.classList.toggle('on', k === i);
@@ -92,8 +163,9 @@
     count.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(pages.length).padStart(2, '0');
     $('#prev').disabled = i === 0;
     $('#next').disabled = i === pages.length - 1;
-    if (hasSand) { if (isTl) tlWrite(); Sand.to(pages[i].dataset.form); }
+    if (hasSand && !isUsa) { if (isTl) tlWrite(); Sand.to(pages[i].dataset.form); }
     if (isTl) tlUpdate();
+    if (isUsa) usaUpdate();
   }
 
   function enterStory(i) {
@@ -127,9 +199,14 @@
       tlPage.scrollTo({ top: tlTop(tlStop + d), behavior: rains ? 'smooth' : 'auto' });
       return;
     }
+    if (pages[current] === usaPage && usaStep + d >= 0 && usaStep + d <= 4) {
+      lastNav = now;
+      usaPage.scrollTo({ top: usaTop(usaStep + d), behavior: rains ? 'smooth' : 'auto' });
+      return;
+    }
     var t = current + d;
     if (t < 0 || t >= pages.length) return;
-    enterAtEnd = pages[t] === tlPage && d < 0;
+    enterAtEnd = (pages[t] === tlPage || pages[t] === usaPage) && d < 0;
     lastNav = now; setHash(t);
   }
   function atEdge(d) {
@@ -142,7 +219,7 @@
     if (!inStory || Math.abs(e.deltaY) < 18) return;
     var d = e.deltaY > 0 ? 1 : -1;
     /* Let a timeline scroll finish before the same gesture can turn the page. */
-    if (pages[current] === tlPage && Date.now() - tlScrolled < 320) return;
+    if ((pages[current] === tlPage || pages[current] === usaPage) && Date.now() - tlScrolled < 320) return;
     if (atEdge(d)) step(d);
   }, { passive: true });
 
@@ -151,7 +228,7 @@
   story.addEventListener('touchend', function (e) {
     if (ty === null) return;
     var dy = ty - e.changedTouches[0].clientY, d = dy > 0 ? 1 : -1; ty = null;
-    if (Math.abs(dy) > 56 && atEdge(d) && (pages[current] !== tlPage || Date.now() - tlScrolled > 320)) step(d);
+    if (Math.abs(dy) > 56 && atEdge(d) && ((pages[current] !== tlPage && pages[current] !== usaPage) || Date.now() - tlScrolled > 320)) step(d);
   }, { passive: true });
 
   addEventListener('keydown', function (e) {
@@ -213,6 +290,8 @@
         if (!inStory) rainLanding(true);
         else if (pages[current] === tlPage) { var k = tlStop; tlWrite(); Sand.to('timeline', true); Sand.reveal(k); }
         else tlLayout();
+        usaDrawn = {};
+        if (inStory && pages[current] === usaPage) { usaStep = -1; usaUpdate(); }
       }, 180);
     });
   }
