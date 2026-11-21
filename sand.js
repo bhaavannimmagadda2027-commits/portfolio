@@ -5,7 +5,7 @@
       STEEL = [0.4, 0.62, 0.74], PALE = [0.93, 0.89, 0.8];
   /* The building is rebuilt from the dots of the reference image. Ground is y 3. */
   var GROUND = 3, FLOOR = 6.6 / 240, TOWER_K = 6.75 / 1090, BELOW_K = 2.75 / 364, GROUND_PX = 1126;
-  var shown = -1, dots = null, cursor = { foot: 0, footEdge: 0, soil: 0, ground: 0, tower: 0, towerEdge: 0 }, towerWaiting = false;
+  var settleTimer = 0, shown = -1, dots = null, cursor = { foot: 0, footEdge: 0, soil: 0, ground: 0, tower: 0, towerEdge: 0 }, towerWaiting = false;
   /* Mark dots at the end of a run, across and down, so the silhouette can be drawn more firmly. */
   function markEdges(all, axis, other) {
     var bins = {};
@@ -351,13 +351,33 @@
     }
   }
 
+  /* Draw an element's words at their exact on-screen positions, relative to a box. */
+  function paintWords(c, el, o) {
+    var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), node;
+    c.textBaseline = 'alphabetic';
+    while ((node = walker.nextNode())) {
+      var st = getComputedStyle(node.parentElement), raw = node.textContent, re = /\S+/g, word;
+      c.font = st.fontStyle + ' ' + st.fontWeight + ' ' + st.fontSize + ' ' + st.fontFamily;
+      if ('letterSpacing' in c) c.letterSpacing = st.letterSpacing === 'normal' ? '0px' : st.letterSpacing;
+      c.fillStyle = st.color;
+      while ((word = re.exec(raw))) {
+        var range = document.createRange();
+        range.setStart(node, word.index); range.setEnd(node, word.index + word[0].length);
+        var rect = range.getBoundingClientRect();
+        if (!rect.width) continue;
+        var text = st.textTransform === 'uppercase' ? word[0].toUpperCase() : word[0];
+        c.fillText(text, rect.left - o.left, rect.top - o.top + c.measureText(text).fontBoundingBoxAscent);
+      }
+    }
+  }
+
   /* Sample every landing item (words, photo, button) so grains land on its real shape and colour. */
   function writeLanding(el) {
     if (!gl) return false;
     var box = canvas.getBoundingClientRect(), W = Math.ceil(box.width), H = Math.ceil(box.height);
     if (!W || !H) return false;
     var make = function () { var o = document.createElement('canvas'); o.width = W; o.height = H; return o.getContext('2d', { willReadFrequently: true }); };
-    var type = make(), solid = make(), walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), node;
+    var type = make(), solid = make();
     el.querySelectorAll('img').forEach(function (im) {
       var b = im.getBoundingClientRect();
       if (!im.complete || !im.naturalWidth || !b.width) return;
@@ -368,21 +388,7 @@
       var bg = getComputedStyle(bt).backgroundColor, b = bt.getBoundingClientRect();
       if (bg.indexOf('20, 17, 12') > -1) { solid.fillStyle = bg; solid.fillRect(b.left - box.left, b.top - box.top, b.width, b.height); }
     });
-    type.textBaseline = 'alphabetic';
-    while ((node = walker.nextNode())) {
-      var st = getComputedStyle(node.parentElement), raw = node.textContent, re = /\S+/g, word;
-      type.font = st.fontStyle + ' ' + st.fontWeight + ' ' + st.fontSize + ' ' + st.fontFamily;
-      if ('letterSpacing' in type) type.letterSpacing = st.letterSpacing === 'normal' ? '0px' : st.letterSpacing;
-      type.fillStyle = st.color;
-      while ((word = re.exec(raw))) {
-        var range = document.createRange();
-        range.setStart(node, word.index); range.setEnd(node, word.index + word[0].length);
-        var rect = range.getBoundingClientRect();
-        if (!rect.width) continue;
-        var text = st.textTransform === 'uppercase' ? word[0].toUpperCase() : word[0];
-        type.fillText(text, rect.left - box.left, rect.top - box.top + type.measureText(text).fontBoundingBoxAscent);
-      }
-    }
+    paintWords(type, el, box);
     var td = type.getImageData(0, 0, W, H).data, sd = solid.getImageData(0, 0, W, H).data, ink = [], fill = [], x, y, p;
     for (y = 0; y < H; y++) for (x = 0; x < W; x++) {
       p = (y * W + x) * 4;
@@ -442,23 +448,32 @@
     var r = rng(7321), pos = new Float32Array(n * 3), col = new Float32Array(n * 3), del = new Float32Array(n).fill(1e4);
     var stage = new Int8Array(n), prog = new Float32Array(n), marks = [], i;
     var lineV = function (u) { return g.v0 + (g.v1 - g.v0) * (u - g.a) / (g.b - g.a); };
-    (g.logos || []).forEach(function (im, s) {
-      if (!im || !im.complete || !im.naturalWidth) return;
-      var b = im.getBoundingClientRect(), k = Math.min(b.width / im.naturalWidth, b.height / im.naturalHeight);
-      var w = Math.max(1, Math.round(im.naturalWidth * k)), h = Math.max(1, Math.round(im.naturalHeight * k));
+    var own = new Uint8Array(n);
+    var sample = function (paint, w, h, x, y) {
       var o = document.createElement('canvas'); o.width = w; o.height = h;
-      var c = o.getContext('2d', { willReadFrequently: true }); c.drawImage(im, 0, 0, w, h);
+      var c = o.getContext('2d', { willReadFrequently: true }); paint(c);
       var d = c.getImageData(0, 0, w, h).data, list = [];
-      for (var p = 0; p < d.length; p += 4) if (d[p + 3] > 120) list.push(p);
-      if (list.length) marks[s] = { d: d, list: list, w: w, x: b.left - box.left + (b.width - w) / 2, y: b.top - box.top + (b.height - h) / 2 };
+      for (var p = 0; p < d.length; p += 4) if (d[p + 3] > 110) list.push(p);
+      return list.length ? { d: d, list: list, w: w, x: x, y: y } : null;
+    };
+    (g.bodies || []).forEach(function (body, s) {
+      var im = g.logos[s], m = {}, bb = body.getBoundingClientRect();
+      if (im && im.complete && im.naturalWidth) {
+        var b = im.getBoundingClientRect(), f = Math.min(b.width / im.naturalWidth, b.height / im.naturalHeight);
+        var w = Math.max(1, Math.round(im.naturalWidth * f)), h = Math.max(1, Math.round(im.naturalHeight * f));
+        m.logo = sample(function (c) { c.drawImage(im, 0, 0, w, h); }, w, h, b.left - box.left + (b.width - w) / 2, b.top - box.top + (b.height - h) / 2);
+      }
+      m.text = sample(function (c) { paintWords(c, body, bb); }, Math.ceil(bb.width), Math.ceil(bb.height), bb.left - box.left, bb.top - box.top);
+      if (m.logo || m.text) marks[s] = m;
     });
+    var hasMarks = marks.filter(Boolean).length > 0;
     for (i = 0; i < n; i++) {
       var j = i * 3, k = r(), s, u, v, c;
-      if (k < 0.34) {
+      if (k < 0.26) {
         /* Passes through, so every step of the timeline arrives with a shower. */
         s = Math.floor(r() * 4); c = dim(mix(RUST, GOLD, r()), 0.7);
         pos[j] = (r() - 0.5) * 10; pos[j + 1] = -2; prog[i] = r();
-      } else if (k < 0.72 || (k >= 0.8 && !marks.length)) {
+      } else if (k < 0.5 || (k >= 0.55 && !hasMarks)) {
         u = g.a + r() * (g.b - g.a); s = 0;
         while (s < 3 && u > (g.nodes[s] + g.nodes[s + 1]) / 2) s++;
         var from = s ? (g.nodes[s - 1] + g.nodes[s]) / 2 : g.a, till = s < 3 ? (g.nodes[s] + g.nodes[s + 1]) / 2 : g.b;
@@ -466,7 +481,7 @@
         v = lineV(u) + (r() + r() + r() - 1.5) * spread / H;
         pos[j] = (u - 0.5) * 10; pos[j + 1] = (1 - v) * 10; prog[i] = (u - from) / (till - from);
         c = dim(mix(AMBER, GOLD, r()), 0.62);
-      } else if (k < 0.8) {
+      } else if (k < 0.55) {
         s = Math.floor(r() * 4); var a = r() * TAU, q = Math.sqrt(r()) * 11;
         u = g.nodes[s]; v = lineV(u);
         pos[j] = (u + Math.cos(a) * q / W - 0.5) * 10; pos[j + 1] = (1 - v - Math.sin(a) * q / H) * 10; prog[i] = 0.6 + r() * 0.4;
@@ -474,13 +489,14 @@
       } else {
         s = Math.floor(r() * 4);
         while (!marks[s]) s = (s + 1) % 4;
-        var m = marks[s], at = m.list[Math.floor(r() * m.list.length)], px = at / 4 % m.w, py = Math.floor(at / 4 / m.w);
-        pos[j] = ((m.x + px + r()) / W - 0.5) * 10; pos[j + 1] = (1 - (m.y + py + r()) / H) * 10; prog[i] = 0.4 + r() * 0.6;
-        c = [m.d[at] / 255 * 0.72, m.d[at + 1] / 255 * 0.72, m.d[at + 2] / 255 * 0.72];
+        var pair = marks[s], isText = pair.text && (!pair.logo || r() < 0.45), m = isText ? pair.text : pair.logo, tone = isText ? 0.95 : 0.72;
+        var at = m.list[Math.floor(r() * m.list.length)], px = at / 4 % m.w, py = Math.floor(at / 4 / m.w);
+        pos[j] = ((m.x + px + r()) / W - 0.5) * 10; pos[j + 1] = (1 - (m.y + py + r()) / H) * 10; prog[i] = 0.4 + r() * 0.6; own[i] = isText ? 2 : 1;
+        c = [m.d[at] / 255 * tone, m.d[at + 1] / 255 * tone, m.d[at + 2] / 255 * tone];
       }
       stage[i] = s; col[j] = c[0]; col[j + 1] = c[1]; col[j + 2] = c[2];
     }
-    cache.timeline = { pos: pos, col: col, del: del, stage: stage, prog: prog };
+    cache.timeline = { pos: pos, col: col, del: del, stage: stage, prog: prog, own: own, solo: !!g.solo };
     return true;
   }
   /* Lets stages up to k land. Stages after k leave again when the reader scrolls back. */
@@ -489,11 +505,20 @@
     if (form !== 'timeline' || !f || k === shown) return;
     var T = performance.now() / 1000 - tStart;
     for (var i = 0; i < n; i++) {
-      var s = f.stage[i], q = i * 4;
-      if (s > k) D[i] = 1e4;
-      else if (s > shown) D[i] = reduce ? -5 : T + f.prog[i] * 0.85 + R[q + 3] * 0.45 - ((0.55 + R[q + 1] * 0.55) * 0.8 + R[q] * 1.25);
+      var s = f.stage[i], q = i * 4, one = f.solo && f.own[i];
+      /* On phones only the current stop's logo and text stay on screen. */
+      var live = one ? s === k : s <= k, was = one ? s === shown : s <= shown;
+      if (!live) D[i] = 1e4;
+      else if (!was) D[i] = reduce ? -5 : T + f.prog[i] * 0.85 + R[q + 3] * 0.45 - ((0.55 + R[q + 1] * 0.55) * 0.8 + R[q] * 1.25);
     }
     shown = k; upload('aD', D);
+    /* Once the sharp words are showing, their grains step aside so the text has no double image. */
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(function () {
+      if (form !== 'timeline' || cache.timeline !== f) return;
+      for (var j = 0; j < n; j++) if (f.own[j] === 2 && f.stage[j] <= shown) D[j] = 1e4;
+      upload('aD', D);
+    }, reduce ? 0 : 3300);
   }
 
   function to(name, instant) {

@@ -177,11 +177,16 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .stops{list-style:none;margin:0;padding:0;position:absolute;inset:0}
 .stop{position:absolute;left:var(--x);top:var(--y);width:min(22%,300px);transform:translateX(-50%)}
 .stop-dot{position:absolute;left:50%;top:0;width:13px;height:13px;margin:-6.5px 0 0 -6.5px;border-radius:50%;background:var(--amber);border:2px solid var(--gold);box-shadow:0 0 14px rgba(217,138,51,.55);opacity:0;transform:scale(.3);transition:opacity .45s,transform .45s}
-.stop.on .stop-dot{opacity:1;transform:none;transition-delay:.55s}
+.stop.on .stop-dot{opacity:1;transform:none;transition-delay:2.1s}
 .stop-body{padding-top:22px;text-align:center;opacity:0;transition:opacity .4s}
-.stop.on .stop-body{opacity:1;transition:opacity .9s .95s}
-.stop-body img{display:block;height:clamp(58px,10vh,92px);width:100%;object-fit:contain;margin:0 auto 10px}
-.stop-mu .stop-body img{height:clamp(46px,7.6vh,70px);margin-bottom:14px}
+.stop.on .stop-body{opacity:1;transition:opacity .7s 2.4s}
+.stop-mu{width:min(25%,340px)}
+.stop-body img{display:block;width:100%;object-fit:contain;margin:0 auto 10px}
+/* Logos grow from the past on the left to the present on the right. */
+.stop-nit .stop-body img{height:clamp(38px,5.6vh,54px)}
+.stop-zs .stop-body img{height:clamp(54px,8.6vh,82px)}
+.stop-pepsico .stop-body img{height:clamp(76px,12.5vh,118px)}
+.stop-mu .stop-body img{height:clamp(84px,14.5vh,136px);margin-bottom:14px}
 .stop-body h3{font:400 clamp(20px,1.75vw,27px)/1.05 var(--serif);color:var(--text);margin:0}
 .stop-body p{font-size:11px;color:var(--gold);margin:5px 0 10px}
 .stop-body ul{list-style:none;margin:0;padding:0;font:400 clamp(12px,.92vw,14px)/1.36 Geist,system-ui,sans-serif;color:var(--text-2)}
@@ -193,7 +198,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
   .stop-body{position:absolute;left:18px;right:18px;top:37%;padding-top:0;visibility:hidden}
   .stop.now .stop-body{visibility:visible}
   .stop.on:not(.now) .stop-body{opacity:0;transition:none}
-  .stop-body img{height:82px}.stop-mu .stop-body img{height:64px}
+  .stop-nit .stop-body img{height:46px}.stop-zs .stop-body img{height:64px}.stop-pepsico .stop-body img{height:86px}.stop-mu .stop-body img{height:92px}
   .stop-body h3{font-size:27px}.stop-body ul{font-size:14.5px}
 }
 @media (prefers-reduced-motion:reduce){.stop-dot,.stop-body{transition:none!important}}

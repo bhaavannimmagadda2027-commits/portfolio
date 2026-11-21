@@ -28,10 +28,10 @@
   });
 
   /* Timeline: reader scroll moves through four stops, and sand lands on each. */
-  var tlPage = $('.page-timeline'), stops = $$('.stop', tlPage), tlLine = $('.tl-fallback line', tlPage), tlStop = -1, tlScrolled = 0, enterAtEnd = false;
+  var tlPage = $('.page-timeline'), stops = $$('.stop', tlPage), tlLine = $('.tl-fallback line', tlPage), tlStop = -1, tlScrolled = 0, enterAtEnd = false, tlReady = false;
   function tlGeometry() {
     return tlPage.clientWidth < 700 ? { a: 0.03, b: 0.97, v0: 0.15, v1: 0.3, nodes: [0.1, 0.367, 0.633, 0.9] }
-      : { a: 0.025, b: 0.945, v0: 0.14, v1: 0.5, nodes: [0.12, 0.36, 0.6, 0.84] };
+      : { a: 0.025, b: 0.945, v0: 0.14, v1: 0.5, nodes: [0.12, 0.345, 0.575, 0.81] };
   }
   function tlLayout() {
     var g = tlGeometry();
@@ -44,12 +44,15 @@
   }
   function tlWrite() {
     var g = tlLayout();
-    g.logos = tlPage.clientWidth < 700 ? [] : stops.map(function (s) { return $('img', s); });
+    g.solo = tlPage.clientWidth < 700;
+    g.logos = stops.map(function (s) { return $('img', s); });
+    g.bodies = stops.map(function (s) { return $('.stop-body', s); });
     return hasSand && Sand.writeTimeline(g);
   }
   function tlMax() { return Math.max(1, tlPage.scrollHeight - tlPage.clientHeight); }
   function tlTop(k) { return k >= 3 ? tlMax() : Math.ceil(tlMax() * k / 4) + 2; }
   function tlUpdate() {
+    if (!tlReady) return;
     var k = Math.min(3, Math.floor(tlPage.scrollTop / tlMax() * 4));
     if (tlPage.scrollTop >= tlMax() - 2) k = 3;
     if (k === tlStop) return;
@@ -59,6 +62,16 @@
   }
   tlPage.addEventListener('scroll', function () { tlScrolled = Date.now(); tlUpdate(); }, { passive: true });
   tlLayout();
+  /* Grains need the final fonts and logos, so the first rain waits for them. */
+  Promise.race([new Promise(function (ok) { setTimeout(ok, 2500); }), Promise.all([
+    document.fonts.load('400 24px "Instrument Serif"'), document.fonts.load('500 11px "Geist Mono"'), document.fonts.load('400 14px "Geist"'), document.fonts.load('500 14px "Geist"')
+  ].concat(stops.map(function (s) { return $('img', s).decode(); }))).catch(function () {})]).then(function () {
+    tlReady = true;
+    if (pages[current] !== tlPage) return;
+    tlStop = -1;
+    if (hasSand) { tlWrite(); Sand.to('timeline'); }
+    tlUpdate();
+  });
 
   /* PepsiCo chapter: five scroll steps on the Census map of the United States. */
   var usaPage = $('.page-usa'), usaStage = $('.usa-stage', usaPage), usaSvg = $('svg', usaPage), usaCopy = $$('.usa-copy p', usaPage);
@@ -166,7 +179,7 @@
     count.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(pages.length).padStart(2, '0');
     $('#prev').disabled = i === 0;
     $('#next').disabled = i === pages.length - 1;
-    if (hasSand && !isUsa) { if (isTl) tlWrite(); Sand.to(pages[i].dataset.form); }
+    if (hasSand && !isUsa && (!isTl || tlReady)) { if (isTl) tlWrite(); Sand.to(pages[i].dataset.form); }
     if (isTl) tlUpdate();
     if (isUsa) usaUpdate();
   }
@@ -291,7 +304,7 @@
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(function () {
         if (!inStory) rainLanding(true);
-        else if (pages[current] === tlPage) { var k = tlStop; tlWrite(); Sand.to('timeline', true); Sand.reveal(k); }
+        else if (pages[current] === tlPage && tlReady) { var k = tlStop; tlWrite(); Sand.to('timeline', true); Sand.reveal(k); }
         else tlLayout();
         usaDrawn = {};
         if (inStory && pages[current] === usaPage) { usaStep = -1; usaUpdate(); }
