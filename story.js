@@ -27,6 +27,39 @@
     marks.forEach(function (m) { m.classList.toggle('on', T >= +m.dataset.at); });
   });
 
+  /* Timeline: reader scroll moves through four stops, and sand lands on each. */
+  var tlPage = $('.page-timeline'), stops = $$('.stop', tlPage), tlLine = $('.tl-fallback line', tlPage), tlStop = -1, tlScrolled = 0, enterAtEnd = false;
+  function tlGeometry() {
+    return tlPage.clientWidth < 700 ? { a: 0.03, b: 0.97, v0: 0.15, v1: 0.3, nodes: [0.1, 0.367, 0.633, 0.9] }
+      : { a: 0.025, b: 0.945, v0: 0.14, v1: 0.5, nodes: [0.12, 0.36, 0.6, 0.84] };
+  }
+  function tlLayout() {
+    var g = tlGeometry();
+    stops.forEach(function (s, i) {
+      s.style.setProperty('--x', (g.nodes[i] * 100).toFixed(2) + '%');
+      s.style.setProperty('--y', ((g.v0 + (g.v1 - g.v0) * (g.nodes[i] - g.a) / (g.b - g.a)) * 100).toFixed(2) + '%');
+    });
+    tlLine.setAttribute('x1', g.a); tlLine.setAttribute('x2', g.b); tlLine.setAttribute('y1', g.v0); tlLine.setAttribute('y2', g.v1);
+    return g;
+  }
+  function tlWrite() {
+    var g = tlLayout();
+    g.logos = tlPage.clientWidth < 700 ? [] : stops.map(function (s) { return $('img', s); });
+    return hasSand && Sand.writeTimeline(g);
+  }
+  function tlMax() { return Math.max(1, tlPage.scrollHeight - tlPage.clientHeight); }
+  function tlTop(k) { return k >= 3 ? tlMax() : Math.ceil(tlMax() * k / 4) + 2; }
+  function tlUpdate() {
+    var k = Math.min(3, Math.floor(tlPage.scrollTop / tlMax() * 4));
+    if (tlPage.scrollTop >= tlMax() - 2) k = 3;
+    if (k === tlStop) return;
+    tlStop = k;
+    stops.forEach(function (s, i) { s.classList.toggle('on', i <= k); s.classList.toggle('now', i === k); });
+    if (hasSand) Sand.reveal(k);
+  }
+  tlPage.addEventListener('scroll', function () { tlScrolled = Date.now(); tlUpdate(); }, { passive: true });
+  tlLayout();
+
   pages.forEach(function (p, i) {
     $$('.r', p).forEach(function (el, k) { el.style.setProperty('--i', k); });
     var b = document.createElement('button');
@@ -48,7 +81,10 @@
       p.setAttribute('aria-hidden', k === i ? 'false' : 'true');
       p.inert = k !== i;
     });
-    pages[i].scrollTop = 0;
+    var isTl = pages[i] === tlPage;
+    if (isTl) tlStop = -1;
+    pages[i].scrollTop = isTl && enterAtEnd ? tlMax() : 0;
+    enterAtEnd = false;
     dots.forEach(function (d, k) {
       d.classList.toggle('on', k === i);
       if (k === i) d.setAttribute('aria-current', 'step'); else d.removeAttribute('aria-current');
@@ -56,7 +92,8 @@
     count.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(pages.length).padStart(2, '0');
     $('#prev').disabled = i === 0;
     $('#next').disabled = i === pages.length - 1;
-    if (hasSand) Sand.to(pages[i].dataset.form);
+    if (hasSand) { if (isTl) tlWrite(); Sand.to(pages[i].dataset.form); }
+    if (isTl) tlUpdate();
   }
 
   function enterStory(i) {
@@ -84,8 +121,15 @@
   function step(d) {
     var now = Date.now();
     if (!inStory || drawer.classList.contains('open') || viewer.open || now - lastNav < 850) return;
+    /* Inside the timeline, keys and arrows go stop by stop before leaving the page. */
+    if (pages[current] === tlPage && tlStop + d >= 0 && tlStop + d <= 3) {
+      lastNav = now;
+      tlPage.scrollTo({ top: tlTop(tlStop + d), behavior: rains ? 'smooth' : 'auto' });
+      return;
+    }
     var t = current + d;
     if (t < 0 || t >= pages.length) return;
+    enterAtEnd = pages[t] === tlPage && d < 0;
     lastNav = now; setHash(t);
   }
   function atEdge(d) {
@@ -97,6 +141,8 @@
   addEventListener('wheel', function (e) {
     if (!inStory || Math.abs(e.deltaY) < 18) return;
     var d = e.deltaY > 0 ? 1 : -1;
+    /* Let a timeline scroll finish before the same gesture can turn the page. */
+    if (pages[current] === tlPage && Date.now() - tlScrolled < 320) return;
     if (atEdge(d)) step(d);
   }, { passive: true });
 
@@ -105,7 +151,7 @@
   story.addEventListener('touchend', function (e) {
     if (ty === null) return;
     var dy = ty - e.changedTouches[0].clientY, d = dy > 0 ? 1 : -1; ty = null;
-    if (Math.abs(dy) > 56 && atEdge(d)) step(d);
+    if (Math.abs(dy) > 56 && atEdge(d) && (pages[current] !== tlPage || Date.now() - tlScrolled > 320)) step(d);
   }, { passive: true });
 
   addEventListener('keydown', function (e) {
@@ -163,7 +209,11 @@
     var resizeTimer = 0;
     addEventListener('resize', function () {
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(function () { if (!inStory) rainLanding(true); }, 180);
+      resizeTimer = setTimeout(function () {
+        if (!inStory) rainLanding(true);
+        else if (pages[current] === tlPage) { var k = tlStop; tlWrite(); Sand.to('timeline', true); Sand.reveal(k); }
+        else tlLayout();
+      }, 180);
     });
   }
   requestAnimationFrame(function () { root.classList.add('ready'); });

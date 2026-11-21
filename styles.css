@@ -35,7 +35,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .l-main{display:grid;grid-template-columns:minmax(0,1fr) clamp(190px,21vw,310px);gap:clamp(24px,5vw,72px);align-items:center;min-height:0;padding:18px 0}
 .l-main h1{font:400 clamp(58px,10.4vw,168px)/.88 var(--serif);letter-spacing:-.025em;margin:0 0 clamp(16px,2.4vw,30px)}
 .l-main h1 em{font-style:italic;color:var(--amber-deep)}
-.l-main p{font-size:clamp(17px,1.5vw,21px);line-height:1.42;color:var(--ink-2);max-width:40ch;margin:0}
+.l-main p{font:italic 400 clamp(21px,1.9vw,28px)/1.25 var(--serif);color:var(--ink-2);max-width:44ch;margin:0}
 .l-photo{margin:0;height:min(100%,52vh);min-height:0;background:var(--cream-2)}
 .l-photo img{width:100%;height:100%;object-fit:cover;object-position:50% 16%}
 .lenses{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--ink)}
@@ -167,6 +167,36 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 /* Fallback when WebGL is unavailable: the page still reads, on black */
 .no-sand #sand,.no-sand #labels{display:none}
 
+/* Scroll timeline */
+.page.page-timeline{display:block;padding:0;overflow-y:auto}
+.tl-track{position:relative;height:400%}
+.tl-stage{position:sticky;top:0;height:25%;overflow:hidden}
+.tl-fallback{display:none;position:absolute;inset:0;width:100%;height:100%}
+.tl-fallback line{stroke:var(--amber);stroke-width:1.5}
+.no-sand .tl-fallback{display:block}
+.stops{list-style:none;margin:0;padding:0;position:absolute;inset:0}
+.stop{position:absolute;left:var(--x);top:var(--y);width:min(22%,300px);transform:translateX(-50%)}
+.stop-dot{position:absolute;left:50%;top:0;width:13px;height:13px;margin:-6.5px 0 0 -6.5px;border-radius:50%;background:var(--amber);border:2px solid var(--gold);box-shadow:0 0 14px rgba(217,138,51,.55);opacity:0;transform:scale(.3);transition:opacity .45s,transform .45s}
+.stop.on .stop-dot{opacity:1;transform:none;transition-delay:.55s}
+.stop-body{padding-top:22px;text-align:center;opacity:0;transition:opacity .4s}
+.stop.on .stop-body{opacity:1;transition:opacity .9s .95s}
+.stop-body img{display:block;height:clamp(58px,10vh,92px);width:100%;object-fit:contain;margin:0 auto 10px}
+.stop-mu .stop-body img{height:clamp(46px,7.6vh,70px);margin-bottom:14px}
+.stop-body h3{font:400 clamp(20px,1.75vw,27px)/1.05 var(--serif);color:var(--text);margin:0}
+.stop-body p{font-size:11px;color:var(--gold);margin:5px 0 10px}
+.stop-body ul{list-style:none;margin:0;padding:0;font:400 clamp(12px,.92vw,14px)/1.36 Geist,system-ui,sans-serif;color:var(--text-2)}
+.stop-body li+li{margin-top:7px}
+.stop-body b{font-weight:500;color:var(--text)}
+@media (max-width:699px){
+  .stop{width:auto;left:0;right:0;top:0;bottom:0;transform:none;pointer-events:none}
+  .stop-dot{left:var(--x);top:var(--y)}
+  .stop-body{position:absolute;left:18px;right:18px;top:37%;padding-top:0;visibility:hidden}
+  .stop.now .stop-body{visibility:visible}
+  .stop.on:not(.now) .stop-body{opacity:0;transition:none}
+  .stop-body img{height:82px}.stop-mu .stop-body img{height:64px}
+  .stop-body h3{font-size:27px}.stop-body ul{font-size:14.5px}
+}
+@media (prefers-reduced-motion:reduce){.stop-dot,.stop-body{transition:none!important}}
 @media (max-width:860px){
   .l-main{grid-template-columns:minmax(0,1fr) 112px;gap:14px;align-items:start;align-content:center}
   .l-photo{height:150px}
@@ -180,7 +210,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
   .lens + .lens{border-top:0}
   #rail{display:none}
   .page{align-items:flex-start;padding:calc(36dvh + 8px) 16px 72px}
-  .page.page-tower{padding:0}
+  .page.page-tower,.page.page-timeline{padding:0}
   .panel{width:100%;margin:0;background:linear-gradient(to bottom,rgba(0,0,0,0),rgba(0,0,0,.78) 34px);padding-top:18px}
   .page h2{font-size:clamp(35px,10vw,52px)}
   .pager{left:auto;right:12px;bottom:12px}

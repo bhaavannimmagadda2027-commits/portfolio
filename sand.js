@@ -5,7 +5,7 @@
       STEEL = [0.4, 0.62, 0.74], PALE = [0.93, 0.89, 0.8];
   /* The building is rebuilt from the dots of the reference image. Ground is y 3. */
   var GROUND = 3, FLOOR = 6.6 / 240, TOWER_K = 6.75 / 1090, BELOW_K = 2.75 / 364, GROUND_PX = 1126;
-  var dots = null, cursor = { foot: 0, footEdge: 0, soil: 0, ground: 0, tower: 0, towerEdge: 0 }, towerWaiting = false;
+  var shown = -1, dots = null, cursor = { foot: 0, footEdge: 0, soil: 0, ground: 0, tower: 0, towerEdge: 0 }, towerWaiting = false;
   /* Mark dots at the end of a run, across and down, so the silhouette can be drawn more firmly. */
   function markEdges(all, axis, other) {
     var bins = {};
@@ -164,7 +164,7 @@
     }
   };
   /* Flat forms use screen-shaped coordinates. Rest is how much light streak stays once settled. */
-  var REST = { landing: 0, tower: 0 }, flatVP = [2.8, 0, 0, 0, 0, 2.8, 0, 0, 0, 0, 0, 0, 0, -14, 0, 14];
+  var REST = { landing: 0, tower: 0, timeline: 0 }, flatVP = [2.8, 0, 0, 0, 0, 2.8, 0, 0, 0, 0, 0, 0, 0, -14, 0, 14];
 
   var LABELS = {
     heaps: [[-2.65, 2.2, 0, 'ZS'], [0.05, 1.65, 0, 'PepsiCo'], [2.6, 1.25, 0, 'RecoveryCo']],
@@ -280,7 +280,7 @@
   /* Keep motion smooth on slow machines: lower sharpness first, then grains, and recover when frames improve.
      Hidden or throttled tabs are ignored, and the shapes always keep enough grains to stay readable. */
   function minQuality() {
-    var need = form === 'tower' ? 22000 : form === 'landing' ? 18000 : 9000;
+    var need = form === 'tower' ? 22000 : form === 'landing' || form === 'timeline' ? 18000 : 9000;
     return Math.min(1, need / n);
   }
   function adapt(now) {
@@ -332,7 +332,8 @@
     if (light) gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     else gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE, gl.ZERO, gl.ONE);
     gl.uniformMatrix4fv(U.uVP, false, vp); gl.uniform2f(U.uShift, shift[0] * (1 - flatMix), shift[1] * (1 - flatMix));
-    gl.uniform1f(U.uMin, form === 'tower' ? Math.max(1.35, canvas.height / canvas.clientHeight) : 1); gl.uniform1f(U.uBright, form === 'tower' ? 0.98 : 0.62);
+    var crisp = form === 'tower' || form === 'timeline';
+    gl.uniform1f(U.uMin, crisp ? Math.max(1.35, canvas.height / canvas.clientHeight) : 1); gl.uniform1f(U.uBright, crisp ? 0.98 : 0.62);
     gl.uniform1f(U.uRest, rest); gl.uniform1f(U.uTint, form === 'landing' || !light ? 1 : 0.58);
     gl.uniform1f(U.uT, T); gl.uniform1f(U.uClock, clock); gl.uniform1f(U.uLight, light ? 1 : 0);
     gl.uniform1f(U.uPx, canvas.height / 330);
@@ -404,13 +405,75 @@
     return true;
   }
 
+  /* Timeline: one descending line in four stages. Each stage also rains onto its logo. */
+  function writeTimeline(g) {
+    if (!gl) return false;
+    var box = canvas.getBoundingClientRect(), W = Math.ceil(box.width), H = Math.ceil(box.height);
+    if (!W || !H) return false;
+    var r = rng(7321), pos = new Float32Array(n * 3), col = new Float32Array(n * 3), del = new Float32Array(n).fill(1e4);
+    var stage = new Int8Array(n), prog = new Float32Array(n), marks = [], i;
+    var lineV = function (u) { return g.v0 + (g.v1 - g.v0) * (u - g.a) / (g.b - g.a); };
+    (g.logos || []).forEach(function (im, s) {
+      if (!im || !im.complete || !im.naturalWidth) return;
+      var b = im.getBoundingClientRect(), k = Math.min(b.width / im.naturalWidth, b.height / im.naturalHeight);
+      var w = Math.max(1, Math.round(im.naturalWidth * k)), h = Math.max(1, Math.round(im.naturalHeight * k));
+      var o = document.createElement('canvas'); o.width = w; o.height = h;
+      var c = o.getContext('2d', { willReadFrequently: true }); c.drawImage(im, 0, 0, w, h);
+      var d = c.getImageData(0, 0, w, h).data, list = [];
+      for (var p = 0; p < d.length; p += 4) if (d[p + 3] > 120) list.push(p);
+      if (list.length) marks[s] = { d: d, list: list, w: w, x: b.left - box.left + (b.width - w) / 2, y: b.top - box.top + (b.height - h) / 2 };
+    });
+    for (i = 0; i < n; i++) {
+      var j = i * 3, k = r(), s, u, v, c;
+      if (k < 0.34) {
+        /* Passes through, so every step of the timeline arrives with a shower. */
+        s = Math.floor(r() * 4); c = dim(mix(RUST, GOLD, r()), 0.7);
+        pos[j] = (r() - 0.5) * 10; pos[j + 1] = -2; prog[i] = r();
+      } else if (k < 0.72 || (k >= 0.8 && !marks.length)) {
+        u = g.a + r() * (g.b - g.a); s = 0;
+        while (s < 3 && u > (g.nodes[s] + g.nodes[s + 1]) / 2) s++;
+        var from = s ? (g.nodes[s - 1] + g.nodes[s]) / 2 : g.a, till = s < 3 ? (g.nodes[s] + g.nodes[s + 1]) / 2 : g.b;
+        var spread = r() < 0.86 ? 0.9 : 3.4;
+        v = lineV(u) + (r() + r() + r() - 1.5) * spread / H;
+        pos[j] = (u - 0.5) * 10; pos[j + 1] = (1 - v) * 10; prog[i] = (u - from) / (till - from);
+        c = dim(mix(AMBER, GOLD, r()), 0.62);
+      } else if (k < 0.8) {
+        s = Math.floor(r() * 4); var a = r() * TAU, q = Math.sqrt(r()) * 11;
+        u = g.nodes[s]; v = lineV(u);
+        pos[j] = (u + Math.cos(a) * q / W - 0.5) * 10; pos[j + 1] = (1 - v - Math.sin(a) * q / H) * 10; prog[i] = 0.6 + r() * 0.4;
+        c = dim(mix(GOLD, PALE, r()), 0.8);
+      } else {
+        s = Math.floor(r() * 4);
+        while (!marks[s]) s = (s + 1) % 4;
+        var m = marks[s], at = m.list[Math.floor(r() * m.list.length)], px = at / 4 % m.w, py = Math.floor(at / 4 / m.w);
+        pos[j] = ((m.x + px + r()) / W - 0.5) * 10; pos[j + 1] = (1 - (m.y + py + r()) / H) * 10; prog[i] = 0.4 + r() * 0.6;
+        c = [m.d[at] / 255 * 0.72, m.d[at + 1] / 255 * 0.72, m.d[at + 2] / 255 * 0.72];
+      }
+      stage[i] = s; col[j] = c[0]; col[j + 1] = c[1]; col[j + 2] = c[2];
+    }
+    cache.timeline = { pos: pos, col: col, del: del, stage: stage, prog: prog };
+    return true;
+  }
+  /* Lets stages up to k land. Stages after k leave again when the reader scrolls back. */
+  function reveal(k) {
+    var f = cache.timeline;
+    if (form !== 'timeline' || !f || k === shown) return;
+    var T = performance.now() / 1000 - tStart;
+    for (var i = 0; i < n; i++) {
+      var s = f.stage[i], q = i * 4;
+      if (s > k) D[i] = 1e4;
+      else if (s > shown) D[i] = reduce ? -5 : T + f.prog[i] * 0.85 + R[q + 3] * 0.45 - ((0.55 + R[q + 1] * 0.55) * 0.8 + R[q] * 1.25);
+    }
+    shown = k; upload('aD', D);
+  }
+
   function to(name, instant) {
     if (!gl) return;
     if (name === 'tower' && !dots) { towerWaiting = true; return; }
     towerWaiting = false;
     var now = performance.now() / 1000, T = now - tStart, f = build(name);
     snapshot(T);
-    B.set(f.pos); CB.set(f.col); D.set(f.del);
+    B.set(f.pos); CB.set(f.col); D.set(f.del); shown = -1;
     upload('aA', A); upload('aCA', CA); upload('aB', B); upload('aCB', CB); upload('aD', D);
     tStart = instant ? now - 30 : now;
     form = name;
@@ -456,5 +519,5 @@
     return true;
   }
 
-  window.Sand = { init: init, to: to, writeLanding: writeLanding, onTower: function (fn) { hook = fn; }, setLight: function (v) { light = v; }, stats: function () { return { quality: quality, dpr: dprCap, grains: Math.floor(n * Math.max(quality, minQuality())) }; } };
+  window.Sand = { init: init, to: to, writeLanding: writeLanding, writeTimeline: writeTimeline, reveal: reveal, onTower: function (fn) { hook = fn; }, setLight: function (v) { light = v; }, stats: function () { return { quality: quality, dpr: dprCap, grains: Math.floor(n * Math.max(quality, minQuality())) }; } };
 })();
