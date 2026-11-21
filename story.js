@@ -62,7 +62,7 @@
 
   /* PepsiCo chapter: five scroll steps on the Census map of the United States. */
   var usaPage = $('.page-usa'), usaStage = $('.usa-stage', usaPage), usaSvg = $('svg', usaPage), usaCopy = $$('.usa-copy p', usaPage);
-  var usaStep = -1, usaData = null, usaImgs = [], usaDrawn = {}, SVGNS = 'http://www.w3.org/2000/svg';
+  var usaLand = 0, usaStep = -1, usaData = null, usaImgs = [], usaDrawn = {}, SVGNS = 'http://www.w3.org/2000/svg';
   var USA_LOGOS = ['pepsico', 'coca-cola', 'dr-pepper', 'private-label'].map(function (n) { return 'assets/logos/original/' + n + '.png'; });
   /* Large logos on the first two steps: [brand, x, y, width, height]. */
   var USA_BIG = [[[0, 470, 292, 240, 270]], [[0, 470, 205, 180, 190], [1, 280, 410, 170, 84], [2, 470, 410, 165, 104], [3, 660, 410, 140, 90]]];
@@ -116,6 +116,9 @@
     if (usaPage.scrollTop >= usaMax() - 2) k = 4;
     if (k === usaStep) return;
     usaStep = k;
+    usaStage.classList.remove('landed');
+    clearTimeout(usaLand);
+    usaLand = setTimeout(function () { usaStage.classList.add('landed'); }, rains ? 2700 : 0);
     usaStage.dataset.step = k;
     usaCopy.forEach(function (c, i) { c.classList.toggle('on', i === k); });
     if (!usaData || !hasSand) return;
