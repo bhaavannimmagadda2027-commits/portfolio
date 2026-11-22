@@ -133,7 +133,7 @@
     clearTimeout(usaLand);
     usaLand = setTimeout(function () { usaStage.classList.add('landed'); }, rains ? 2700 : 0);
     usaStage.dataset.step = k;
-    usaCopy.forEach(function (c, i) { c.classList.toggle('on', i === k); });
+    usaCopy.forEach(function (c, i) { c.classList.toggle('on', i === k); c.classList.toggle('seen', i <= k); });
     if (!usaData || !hasSand) return;
     var name = 'usa' + k;
     if (!usaDrawn[name]) usaDrawn[name] = Sand.writeForm(name, usaDraw(k));

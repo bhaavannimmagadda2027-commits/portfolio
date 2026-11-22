@@ -206,13 +206,14 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .page.page-usa{display:block;padding:0;overflow-y:auto}
 .usa-track{position:relative;height:500%}
 .usa-stage{position:sticky;top:0;height:20%;overflow:hidden}
-.usa-role{position:absolute;z-index:1;top:clamp(82px,11.5vh,104px);right:clamp(46px,5vw,72px);width:clamp(250px,27vw,380px);margin:0;text-align:right}
-.usa-role b{display:block;font:400 clamp(18px,1.6vw,25px)/1.08 var(--serif);color:var(--text)}
+.usa-role{position:absolute;z-index:1;top:clamp(62px,8.5vh,80px);left:calc(50% + 8px);right:clamp(46px,5vw,72px);margin:0;text-align:right}
+.usa-role b{display:block;font:400 clamp(16px,1.4vw,22px)/1.1 var(--serif);color:var(--text)}
 .usa-role span{display:block;margin-top:4px;font-size:11px;color:var(--gold)}
-.usa-copy{position:absolute;z-index:1;left:clamp(16px,2.6vw,36px);right:calc(clamp(46px,5vw,72px) + clamp(250px,27vw,380px) + 28px);top:clamp(82px,11.5vh,104px);height:clamp(112px,16vh,150px)}
-.usa-copy p{position:absolute;left:0;right:0;top:0;margin:0;text-align:left;font:400 clamp(19px,1.62vw,25px)/1.25 var(--serif);color:var(--text);opacity:0;transition:opacity .25s}
-.usa-copy p.on{opacity:1;transition:opacity .8s .9s}
-.usa-map{position:absolute;left:clamp(70px,11vw,190px);right:clamp(70px,11vw,190px);top:clamp(206px,29vh,270px);bottom:64px}
+.usa-copy{position:absolute;z-index:1;left:clamp(16px,2.6vw,36px);right:calc(50% + 28px);top:clamp(96px,14vh,130px);bottom:66px;display:flex;flex-direction:column;gap:clamp(12px,2vh,20px)}
+.usa-copy p{margin:0;text-align:left;font:400 clamp(17px,min(1.45vw,2.5vh),24px)/1.28 var(--serif);color:var(--text);opacity:0;transition:opacity .25s}
+.usa-copy p.seen:not(.on){opacity:1}
+.usa-stage.landed .usa-copy p.on{opacity:1;transition:opacity .7s}
+.usa-map{position:absolute;left:calc(50% + 8px);right:clamp(46px,5vw,72px);top:clamp(118px,17vh,150px);bottom:66px}
 .usa-map svg{display:block;width:100%;height:100%;overflow:visible}
 .usa-nation,.usa-borders{fill:none;stroke:var(--gold);vector-effect:non-scaling-stroke;opacity:0;transition:opacity .15s}
 .usa-nation{stroke-width:1}
@@ -230,9 +231,10 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .no-sand .usa-stage[data-step="0"] .usa-big.usa-s0,.no-sand .usa-stage[data-step="1"] .usa-big.usa-s1{opacity:1!important}
 @media (max-width:699px){
   .usa-role{top:62px;left:16px;right:16px;width:auto;text-align:left}
-  .usa-role b{font-size:17px}.usa-role span{font-size:10px}
-  .usa-copy{left:16px;right:16px;top:116px;height:176px}
-  .usa-copy p{font-size:18px;line-height:1.26}
+  .usa-role b{font-size:16px}.usa-role span{font-size:10px}
+  .usa-copy{display:block;left:16px;right:16px;top:116px;bottom:auto;height:176px}
+  .usa-copy p{position:absolute;left:0;right:0;top:0;font-size:18px;line-height:1.26}
+  .usa-copy p.seen:not(.on){opacity:0}
   .usa-map{left:24px;right:24px;top:304px;bottom:auto;height:calc((100vw - 64px)*.56)}
   .usa-key{display:flex;position:absolute;left:16px;right:16px;top:calc(312px + (100vw - 64px)*.56);align-items:center;justify-content:space-between;height:28px;opacity:0;transition:opacity .5s}
   .usa-key img{height:26px;width:22%;object-fit:contain}
