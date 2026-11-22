@@ -250,7 +250,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .usa-map{container-type:size}
 .usa-ann{position:absolute;left:0;right:0;top:calc(50% + min(28.3cqw,50cqh) + 36px);margin:0;text-align:center;font:italic 400 clamp(15px,min(1.2vw,2.1vh),20px)/1.3 var(--serif);color:var(--gold);opacity:0;transition:opacity .25s}
 .usa-ann span{display:block}
-.usa-stage.landed[data-step="2"] .usa-ann-2,.usa-stage.landed[data-step="3"] .usa-ann-3{opacity:1;transition:opacity .7s}
+.usa-stage.landed[data-step="2"] .usa-ann-2,.usa-stage.landed[data-step="3"] .usa-ann-3,.usa-stage.landed.final .usa-ann-4{opacity:1;transition:opacity .7s}
 .no-sand .usa-stage[data-step="0"] .usa-big.usa-s0,.no-sand .usa-stage[data-step="1"] .usa-big.usa-s1{opacity:1!important}
 @media (max-width:699px){
   .usa-role{top:62px;left:16px;right:16px;width:auto;text-align:left}

@@ -128,6 +128,7 @@
     usaIntroTimers.forEach(clearTimeout); usaIntroTimers = [];
     usaIntroOn = false; usaPage.style.overflowY = '';
     usaStage.classList.remove('intro', 'moving');
+    if (usaStep < 0) usaStage.classList.remove('final');
     var p = $('p', usaIntro), d = $('.mono', usaIntro);
     p.style.transform = p.style.transformOrigin = d.style.transform = '';
   }
@@ -165,6 +166,7 @@
     var layer = USA_MAP[k], same = usaStep >= 0 && USA_MAP[usaStep] === layer;
     usaStep = k;
     usaCopy.forEach(function (c, i) { c.classList.toggle('on', i === k); c.classList.toggle('seen', i <= k); });
+    usaStage.classList.toggle('final', k === 4);
     if (same) return;
     usaStage.classList.remove('landed');
     clearTimeout(usaLand);
