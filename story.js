@@ -122,7 +122,43 @@
   function usaTop(k) { return k >= 4 ? usaMax() : Math.ceil(usaMax() * k / 5) + 2; }
   /* Picture for each sentence. The PepsiCo-only map is retired; the last two sentences share the final map. */
   var USA_MAP = [1, 2, 3, 4, 4];
+  /* Opening title: builds in four beats, holds for reading, then moves to its place at the top right. */
+  var usaIntro = $('.usa-intro', usaPage), usaIntroOn = false, usaIntroTimers = [], usaIntroRun = 0;
+  function usaIntroStop() {
+    usaIntroTimers.forEach(clearTimeout); usaIntroTimers = [];
+    usaIntroOn = false; usaPage.style.overflowY = '';
+    usaStage.classList.remove('intro', 'moving');
+    var p = $('p', usaIntro), d = $('.mono', usaIntro);
+    p.style.transform = p.style.transformOrigin = d.style.transform = '';
+  }
+  function usaIntroMove() {
+    var p = $('p', usaIntro), d = $('.mono', usaIntro), role = $('.usa-role', usaStage), rb = $('b', role);
+    var a = p.getBoundingClientRect(), r = rb.getBoundingClientRect(), dw = d.getBoundingClientRect().width;
+    var right = getComputedStyle(role).textAlign === 'right';
+    var s = parseFloat(getComputedStyle(rb).fontSize) / parseFloat(getComputedStyle($('b', p)).fontSize);
+    usaIntroOn = false; usaPage.style.overflowY = '';
+    usaStage.classList.add('moving');
+    p.style.transformOrigin = right ? '100% 0' : '0 0';
+    p.style.transform = 'translate(' + (right ? r.right - a.right : r.left - a.left) + 'px,' + (r.top - a.top) + 'px) scale(' + s + ')';
+    if (right) d.style.transform = 'translateX(' + (a.width - dw) + 'px)';
+    usaUpdate();
+    usaIntroTimers.push(setTimeout(usaIntroStop, 950));
+  }
+  function usaIntroPlay() {
+    usaIntroStop();
+    usaIntroOn = true; usaPage.style.overflowY = 'hidden';
+    usaStage.classList.remove('landed');
+    usaCopy.forEach(function (c) { c.classList.remove('on', 'seen'); });
+    void usaStage.offsetWidth;
+    usaStage.classList.add('intro');
+    /* Two full seconds to read, counted from the moment the last beat has landed. */
+    var run = ++usaIntroRun;
+    $('.b4', usaIntro).addEventListener('animationend', function () {
+      if (run === usaIntroRun && usaIntroOn) usaIntroTimers.push(setTimeout(usaIntroMove, 2000));
+    }, { once: true });
+  }
   function usaUpdate() {
+    if (usaIntroOn) return;
     var k = Math.min(4, Math.floor(usaPage.scrollTop / usaMax() * 5));
     if (usaPage.scrollTop >= usaMax() - 2) k = 4;
     if (k === usaStep) return;
@@ -162,6 +198,7 @@
     i = Math.max(0, Math.min(pages.length - 1, i));
     if (i === current) return;
     current = i;
+    usaIntroStop();
     pages.forEach(function (p, k) {
       p.classList.toggle('on', k === i);
       p.setAttribute('aria-hidden', k === i ? 'false' : 'true');
@@ -181,7 +218,7 @@
     $('#next').disabled = i === pages.length - 1;
     if (hasSand && !isUsa && (!isTl || tlReady)) { if (isTl) tlWrite(); Sand.to(pages[i].dataset.form); }
     if (isTl) tlUpdate();
-    if (isUsa) usaUpdate();
+    if (isUsa) { if (rains && pages[i].scrollTop === 0) usaIntroPlay(); else usaUpdate(); }
   }
 
   function enterStory(i) {
@@ -196,6 +233,7 @@
   function leaveStory() {
     if (!inStory) return;
     inStory = false; current = -1;
+    usaIntroStop();
     closeDrawer();
     root.classList.remove('is-story');
     landing.inert = false; story.inert = true;
@@ -215,6 +253,7 @@
       tlPage.scrollTo({ top: tlTop(tlStop + d), behavior: rains ? 'smooth' : 'auto' });
       return;
     }
+    if (pages[current] === usaPage && usaIntroOn && d > 0) return;
     if (pages[current] === usaPage && usaStep + d >= 0 && usaStep + d <= 4) {
       lastNav = now;
       usaPage.scrollTo({ top: usaTop(usaStep + d), behavior: rains ? 'smooth' : 'auto' });
