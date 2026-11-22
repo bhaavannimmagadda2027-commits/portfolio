@@ -221,6 +221,7 @@
     var s = parseFloat(getComputedStyle(rgCopy[0]).fontSize);
     while (s > 12 && rgBox.scrollHeight > rgBox.clientHeight) { s -= .25; rgBox.style.setProperty('--rg-size', s + 'px'); }
   }
+  if (document.fonts) document.fonts.ready.then(function () { if (pages[current] === rgPage) rgFitCopy(); });
   function rgMark(k) {
     rgCopy.forEach(function (c, i) {
       c.classList.toggle('on', i === k);

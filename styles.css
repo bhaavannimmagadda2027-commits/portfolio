@@ -310,10 +310,9 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .rg-stage.landed[data-art="1"] .rg-note{opacity:1}
 @media (max-width:860px){
   .page.page-rest{padding:0}
-  .rg-copy{left:16px;right:16px;top:60px;bottom:calc(92px + (100vw - 32px)/1.5)}
+  .rg-copy{left:16px;right:16px;top:60px;bottom:calc(92px + min(calc((100vw - 32px)/1.5),36vh))}
   .rg-copy p{font-size:clamp(14px,3.9vw,16px);line-height:1.25}
-  .rg-art{left:16px;right:16px;top:auto;bottom:80px;height:calc((100vw - 32px)/1.5)}
-  .rg-frame{width:100%}
+  .rg-art{left:16px;right:16px;top:auto;bottom:80px;height:min(calc((100vw - 32px)/1.5),36vh)}
   .rg-note{bottom:-16px}
 }
 @media (max-width:860px){
