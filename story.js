@@ -92,7 +92,7 @@
     svgEl('path', { class: 'usa-borders', d: usaData.borders }, usaSvg);
     svgEl('path', { class: 'usa-nation', d: usaData.nation }, usaSvg);
     USA_BIG.forEach(function (set, i) { var g = svgEl('g', { class: 'usa-g usa-big usa-s' + i }, usaSvg); set.forEach(function (s) { usaLogo(g, s); }); });
-    ['a', 'b', 'd'].forEach(function (key, i) {
+    ['a', 'b'].forEach(function (key, i) {
       var g = svgEl('g', { class: 'usa-g usa-s' + (i + 2) }, usaSvg);
       usaData.states.forEach(function (st) {
         if (st.row) {
@@ -102,6 +102,9 @@
         st[key].forEach(function (s) { usaLogo(g, s); });
       });
     });
+    /* Final map: every account is a city, with one leading brand each. */
+    var cityLayer = svgEl('g', { class: 'usa-g usa-s4' }, usaSvg);
+    usaData.cities.forEach(function (s) { usaLogo(cityLayer, s); });
   }
   function usaDraw(step) {
     return function (line, mark, box) {
@@ -111,9 +114,9 @@
       line.lineJoin = 'round'; line.strokeStyle = '#F0C98A';
       if (step >= 2) { line.lineWidth = 1.2 / k; line.stroke(new Path2D(usaData.borders)); }
       line.lineWidth = 1.9 / k; line.stroke(new Path2D(usaData.nation));
-      var list = step < 2 ? USA_BIG[step] : [];
-      if (step >= 2) usaData.states.forEach(function (st) {
-        st[['a', 'b', 'd'][step - 2]].forEach(function (s) { list.push(s); });
+      var list = step < 2 ? USA_BIG[step] : step === 4 ? usaData.cities : [];
+      if (step === 2 || step === 3) usaData.states.forEach(function (st) {
+        st[['a', 'b'][step - 2]].forEach(function (s) { list.push(s); });
         if (st.row) { line.lineWidth = 0.7 / k; line.beginPath(); line.moveTo(st.x, st.y); line.lineTo(st.row[0] - 2, st.row[1]); line.stroke(); }
       });
       list.forEach(function (s) {
