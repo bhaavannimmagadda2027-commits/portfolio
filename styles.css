@@ -210,7 +210,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .usa-role b{display:block;font:400 clamp(16px,1.4vw,22px)/1.1 var(--serif);color:var(--text)}
 .usa-role span{display:block;margin-top:4px;font-size:11px;color:var(--gold)}
 .usa-copy{position:absolute;z-index:1;left:clamp(16px,2.6vw,36px);right:calc(50% + 28px);top:clamp(96px,14vh,130px);bottom:66px;display:flex;flex-direction:column;justify-content:center;gap:clamp(12px,2vh,20px)}
-.usa-copy p{margin:0;text-align:left;font:400 clamp(16px,min(1.45vw,2.5vh),24px)/1.28 var(--serif);color:var(--text);opacity:0;transition:opacity .25s}
+.usa-copy p{margin:0;text-align:justify;font:400 clamp(16px,min(1.45vw,2.5vh),24px)/1.28 var(--serif);color:var(--text);opacity:0;transition:opacity .25s}
 .usa-copy p.seen:not(.on){opacity:1}
 .usa-stage.landed .usa-copy p.on{opacity:1;transition:opacity .7s}
 .usa-map{position:absolute;left:calc(50% + 8px);right:clamp(46px,5vw,72px);top:clamp(118px,17vh,150px);bottom:66px}
