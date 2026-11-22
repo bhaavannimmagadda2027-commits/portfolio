@@ -120,19 +120,23 @@
   }
   function usaMax() { return Math.max(1, usaPage.scrollHeight - usaPage.clientHeight); }
   function usaTop(k) { return k >= 4 ? usaMax() : Math.ceil(usaMax() * k / 5) + 2; }
+  /* Picture for each sentence. The PepsiCo-only map is retired; the last two sentences share the final map. */
+  var USA_MAP = [1, 2, 3, 4, 4];
   function usaUpdate() {
     var k = Math.min(4, Math.floor(usaPage.scrollTop / usaMax() * 5));
     if (usaPage.scrollTop >= usaMax() - 2) k = 4;
     if (k === usaStep) return;
+    var layer = USA_MAP[k], same = usaStep >= 0 && USA_MAP[usaStep] === layer;
     usaStep = k;
+    usaCopy.forEach(function (c, i) { c.classList.toggle('on', i === k); c.classList.toggle('seen', i <= k); });
+    if (same) return;
     usaStage.classList.remove('landed');
     clearTimeout(usaLand);
     usaLand = setTimeout(function () { usaStage.classList.add('landed'); }, rains ? 2700 : 0);
-    usaStage.dataset.step = k;
-    usaCopy.forEach(function (c, i) { c.classList.toggle('on', i === k); c.classList.toggle('seen', i <= k); });
+    usaStage.dataset.step = layer;
     if (!usaData || !hasSand) return;
-    var name = 'usa' + k;
-    if (!usaDrawn[name]) usaDrawn[name] = Sand.writeForm(name, usaDraw(k));
+    var name = 'usa' + layer;
+    if (!usaDrawn[name]) usaDrawn[name] = Sand.writeForm(name, usaDraw(layer));
     if (usaDrawn[name]) Sand.to(name);
   }
   usaPage.addEventListener('scroll', function () { tlScrolled = Date.now(); usaUpdate(); }, { passive: true });
