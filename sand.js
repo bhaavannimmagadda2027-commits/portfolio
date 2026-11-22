@@ -381,12 +381,17 @@
     el.querySelectorAll('img').forEach(function (im) {
       var b = im.getBoundingClientRect();
       if (!im.complete || !im.naturalWidth || !b.width) return;
+      if (getComputedStyle(im).objectFit === 'contain') {
+        var f = Math.min(b.width / im.naturalWidth, b.height / im.naturalHeight), iw = im.naturalWidth * f, ih = im.naturalHeight * f;
+        solid.drawImage(im, b.left - box.left + (b.width - iw) / 2, b.top - box.top + (b.height - ih) / 2, iw, ih);
+        return;
+      }
       var s = Math.max(b.width / im.naturalWidth, b.height / im.naturalHeight), sw = b.width / s, sh = b.height / s;
       solid.drawImage(im, (im.naturalWidth - sw) * 0.5, (im.naturalHeight - sh) * 0.16, sw, sh, b.left - box.left, b.top - box.top, b.width, b.height);
     });
     el.querySelectorAll('button').forEach(function (bt) {
       var bg = getComputedStyle(bt).backgroundColor, b = bt.getBoundingClientRect();
-      if (bg.indexOf('20, 17, 12') > -1) { solid.fillStyle = bg; solid.fillRect(b.left - box.left, b.top - box.top, b.width, b.height); }
+      if (bt.id === 'enter') { solid.fillStyle = bg; solid.fillRect(b.left - box.left, b.top - box.top, b.width, b.height); }
     });
     paintWords(type, el, box);
     var td = type.getImageData(0, 0, W, H).data, sd = solid.getImageData(0, 0, W, H).data, ink = [], fill = [], x, y, p;

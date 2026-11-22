@@ -8,7 +8,7 @@
 
   var hasSand = false;
   try { hasSand = window.Sand && Sand.init($('#sand'), $('#labels')); } catch (e) { hasSand = false; }
-  if (!hasSand) root.classList.add('no-sand');
+  if (!hasSand) root.classList.add('no-sand'); else Sand.setLight(false);
   var rains = hasSand && !matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (rains) root.classList.add('land-waits');
 
@@ -199,7 +199,7 @@
     closeDrawer();
     root.classList.remove('is-story');
     landing.inert = false; story.inert = true;
-    if (hasSand) { Sand.setLight(true); rainLanding(); }
+    if (hasSand) rainLanding();
   }
   function route() {
     var m = /^#strategy(?:\/(\d+))?$/.exec(location.hash);
@@ -297,7 +297,7 @@
     var wait = new Promise(function (ok) { setTimeout(ok, 1800); }), photo = $('.l-photo img');
     var quiet = function (p) { return p.catch(function () {}); };
     var ready = Promise.all([quiet(document.fonts.load('100px "Instrument Serif"')), quiet(document.fonts.load('italic 100px "Instrument Serif"')),
-      quiet(document.fonts.load('500 12px "Geist Mono"')), quiet(document.fonts.load('400 16px "Geist"')), quiet(photo.decode())]);
+      quiet(document.fonts.load('500 12px "Geist Mono"')), quiet(document.fonts.load('400 16px "Geist"')), quiet(photo.decode())].concat($$('.proof img').map(function (im) { return quiet(im.decode()); })));
     Promise.race([ready, wait]).then(function () { if (!inStory) rainLanding(); else root.classList.add('land-rains'); });
     var resizeTimer = 0;
     addEventListener('resize', function () {
