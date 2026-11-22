@@ -265,7 +265,40 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
   .usa-ann{left:0;right:0;top:calc(100% + 86px);font-size:16px}
   .usa-stage:not([data-step="0"]):not([data-step="1"]) .usa-key{opacity:1}
 }
-@media (prefers-reduced-motion:reduce){.usa-g,.usa-ann,.usa-copy p,.usa-borders,.usa-nation{transition:none!important}}
+@media (prefers-reduced-motion:reduce){.usa-g,.usa-ann,.usa-copy p,.usa-borders,.usa-nation,.rg-scene,.rg-dash,.rg-note,.rg-copy p{transition:none!important}}
+
+/* Restaurant chapter */
+.page.page-rest{display:block;padding:0;overflow-y:auto}
+.rg-track{position:relative;height:600%}
+.rg-stage{position:sticky;top:0;height:calc(100%/6);overflow:hidden}
+.rg-title{display:none;position:absolute;inset:0;z-index:3;margin:0;padding:0 clamp(20px,8vw,120px);align-items:center;justify-content:center;text-align:center;background:var(--black);font:400 clamp(32px,min(3.7vw,7vh),60px)/1.08 var(--serif);letter-spacing:-.012em;color:var(--text);pointer-events:none}
+.rg-title span{opacity:0;animation:role-beat .45s ease .1s forwards}
+.rg-stage.titled .rg-title{display:flex}
+.rg-stage.title-out .rg-title{opacity:0;transition:opacity .45s}
+.rg-copy{position:absolute;z-index:1;left:clamp(16px,2.6vw,36px);right:calc(50% + 28px);top:clamp(62px,8.5vh,80px);bottom:70px;display:flex;flex-direction:column;justify-content:center;gap:clamp(8px,1.5vh,16px)}
+.rg-copy p{display:none;margin:0;text-align:justify;font:400 clamp(15px,min(1.34vw,2.34vh),22px)/1.26 var(--serif);color:var(--text);opacity:0;transition:opacity .25s}
+.rg-copy p.seen{display:block}
+.rg-copy p.seen:not(.on){opacity:1}
+.rg-stage.landed .rg-copy p.on{opacity:1;transition:opacity .7s}
+.rg-art{position:absolute;left:calc(50% + 8px);right:clamp(46px,5vw,72px);top:clamp(62px,8.5vh,80px);bottom:70px;display:flex;align-items:center;justify-content:center;container-type:size}
+.rg-frame{position:relative;width:min(100cqw,150cqh);aspect-ratio:3/2}
+.rg-scene,.rg-dash{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity .2s}
+.rg-scene{display:block;pointer-events:none}
+.rg-dash{padding:0;border:0;background:none;cursor:zoom-in;pointer-events:none}
+.rg-dash img{display:block;width:100%;height:100%;object-fit:contain}
+.rg-stage.landed:not([data-art="2"]) .rg-scene{opacity:1;transition:opacity .7s}
+.rg-stage.landed[data-art="2"] .rg-dash{opacity:1;pointer-events:auto;transition:opacity .7s}
+.rg-note{position:absolute;right:0;bottom:-22px;font-size:9.5px;color:var(--text-3);opacity:0;transition:opacity .4s}
+.rg-stage.landed[data-art="1"] .rg-note{opacity:1}
+@media (max-width:860px){
+  .page.page-rest{padding:0}
+  .rg-copy{display:block;left:16px;right:16px;top:60px;bottom:calc(92px + (100vw - 32px)/1.5)}
+  .rg-copy p{position:absolute;left:0;right:0;top:0;font-size:clamp(15px,4.3vw,17px);line-height:1.25}
+  .rg-copy p.seen:not(.on){display:none}
+  .rg-art{left:16px;right:16px;top:auto;bottom:80px;height:calc((100vw - 32px)/1.5)}
+  .rg-frame{width:100%}
+  .rg-note{bottom:-16px}
+}
 @media (max-width:860px){
   #landing{overflow-y:auto}
   .l-main{grid-template-columns:minmax(0,1fr) 94px;gap:12px 14px;align-items:start;align-content:center}

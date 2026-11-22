@@ -184,6 +184,97 @@
     if (pages[current] === usaPage) { usaStep = -1; usaUpdate(); }
   }).catch(function () {});
 
+  /* Restaurant chapter: a title, then six scroll steps over three sand pictures. */
+  var rgPage = $('.page-rest'), rgStage = $('.rg-stage', rgPage), rgCopy = $$('.rg-copy p', rgPage), rgCanvas = $('.rg-scene', rgPage), rgFrame = $('.rg-frame', rgPage);
+  var RG_ART = [0, 1, 2, 2, 2, 2], rgStep = -1, rgLand = 0, rgGo = 0, rgDoorAt = 0, rgDrawn = {}, rgTitleOn = false, rgTitleTimers = [];
+  var rgDash = new Image(); rgDash.src = 'assets/projects/restaurant/growth-planner.webp';
+  function rgPaint(layer) {
+    if (layer > 1) return;
+    var r = rgFrame.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1), w = Math.round(r.width * d), h = Math.round(r.height * d);
+    if (!w || !h) return;
+    if (rgCanvas.width !== w || rgCanvas.height !== h) { rgCanvas.width = w; rgCanvas.height = h; }
+    var c = rgCanvas.getContext('2d'), k = w / Scenes.W, now = performance.now();
+    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, w, h); c.setTransform(k, 0, 0, k, 0, 0);
+    if (layer === 1) Scenes.counter(c);
+    else Scenes.shop(c, rains ? now / 1000 : 0, rgDoorAt ? Math.min(1, (now - rgDoorAt) / 450) : 0);
+  }
+  function rgDraw(layer) {
+    return function (line, mark, box) {
+      var r = rgFrame.getBoundingClientRect(), k = r.width / Scenes.W;
+      [line, mark].forEach(function (c) {
+        c.setTransform(k, 0, 0, k, r.left - box.left, r.top - box.top);
+        if (layer === 2) c.drawImage(rgDash, 0, 0, Scenes.W, Scenes.H);
+        else if (layer === 1) Scenes.counter(c);
+        else Scenes.shop(c);
+      });
+    };
+  }
+  function rgMark(k) {
+    var art = RG_ART[k], group = art < 2 ? 0 : 1;
+    rgCopy.forEach(function (c, i) {
+      c.classList.toggle('on', i === k);
+      c.classList.toggle('seen', i <= k && (RG_ART[i] < 2 ? 0 : 1) === group);
+    });
+  }
+  function rgShow(layer, k) {
+    rgDoorAt = 0;
+    rgStage.classList.remove('landed');
+    rgStage.dataset.art = layer;
+    rgMark(k);
+    rgPaint(layer);
+    clearTimeout(rgLand);
+    rgLand = setTimeout(function () { rgStage.classList.add('landed'); }, rains ? 2700 : 0);
+    if (!hasSand) return;
+    var name = 'rest' + layer;
+    if (!rgDrawn[name]) rgDrawn[name] = Sand.writeForm(name, rgDraw(layer));
+    if (rgDrawn[name]) Sand.to(name);
+  }
+  function rgUpdate() {
+    if (rgTitleOn) return;
+    var k = Math.min(5, Math.floor(rgPage.scrollTop / rgMax() * 6));
+    if (rgPage.scrollTop >= rgMax() - 2) k = 5;
+    if (k === rgStep) return;
+    var was = rgStep, layer = RG_ART[k];
+    rgStep = k;
+    clearTimeout(rgGo); rgDoorAt = 0;
+    if (was >= 0 && RG_ART[was] === layer) { rgMark(k); return; }
+    /* Walking in: the door swings open before the sand moves to the counter. */
+    if (rains && was === 0 && k === 1 && rgStage.classList.contains('landed')) {
+      rgDoorAt = performance.now();
+      rgGo = setTimeout(function () { rgShow(layer, k); }, 520);
+      return;
+    }
+    rgShow(layer, k);
+  }
+  function rgMax() { return Math.max(1, rgPage.scrollHeight - rgPage.clientHeight); }
+  function rgTop(k) { return k >= 5 ? rgMax() : Math.ceil(rgMax() * k / 6) + 2; }
+  function rgStop() {
+    rgTitleTimers.forEach(clearTimeout); rgTitleTimers = [];
+    clearTimeout(rgGo); clearTimeout(rgLand); rgDoorAt = 0;
+    rgTitleOn = false; rgPage.style.overflowY = '';
+    rgStage.classList.remove('titled', 'title-out');
+  }
+  function rgTitle() {
+    rgStop();
+    rgTitleOn = true; rgPage.style.overflowY = 'hidden';
+    rgStage.classList.remove('landed');
+    rgCopy.forEach(function (c) { c.classList.remove('on', 'seen'); });
+    void rgStage.offsetWidth;
+    rgStage.classList.add('titled');
+    /* Fades in, stays for three full seconds, then leaves as the first picture rains in. */
+    rgTitleTimers.push(setTimeout(function () {
+      rgTitleOn = false; rgPage.style.overflowY = '';
+      rgStage.classList.add('title-out');
+      rgUpdate();
+      rgTitleTimers.push(setTimeout(function () { rgStage.classList.remove('titled', 'title-out'); }, 460));
+    }, 3550));
+  }
+  rgPage.addEventListener('scroll', function () { tlScrolled = Date.now(); rgUpdate(); }, { passive: true });
+  if (rains) setInterval(function () {
+    if (pages[current] === rgPage && !document.hidden && rgStage.dataset.art === '0' && rgStage.classList.contains('landed')) rgPaint(0);
+  }, 70);
+  function isScrolly(p) { return p === tlPage || p === usaPage || p === rgPage; }
+
   pages.forEach(function (p, i) {
     $$('.r', p).forEach(function (el, k) { el.style.setProperty('--i', k); });
     var b = document.createElement('button');
@@ -200,16 +291,17 @@
     i = Math.max(0, Math.min(pages.length - 1, i));
     if (i === current) return;
     current = i;
-    usaIntroStop();
+    usaIntroStop(); rgStop();
     pages.forEach(function (p, k) {
       p.classList.toggle('on', k === i);
       p.setAttribute('aria-hidden', k === i ? 'false' : 'true');
       p.inert = k !== i;
     });
-    var isTl = pages[i] === tlPage, isUsa = pages[i] === usaPage;
+    var isTl = pages[i] === tlPage, isUsa = pages[i] === usaPage, isRg = pages[i] === rgPage;
     if (isTl) tlStop = -1;
     if (isUsa) usaStep = -1;
-    pages[i].scrollTop = enterAtEnd && (isTl || isUsa) ? pages[i].scrollHeight : 0;
+    if (isRg) rgStep = -1;
+    pages[i].scrollTop = enterAtEnd && (isTl || isUsa || isRg) ? pages[i].scrollHeight : 0;
     enterAtEnd = false;
     dots.forEach(function (d, k) {
       d.classList.toggle('on', k === i);
@@ -218,9 +310,10 @@
     count.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(pages.length).padStart(2, '0');
     $('#prev').disabled = i === 0;
     $('#next').disabled = i === pages.length - 1;
-    if (hasSand && !isUsa && (!isTl || tlReady)) { if (isTl) tlWrite(); Sand.to(pages[i].dataset.form); }
+    if (hasSand && !isUsa && !isRg && (!isTl || tlReady)) { if (isTl) tlWrite(); Sand.to(pages[i].dataset.form); }
     if (isTl) tlUpdate();
     if (isUsa) { if (rains && pages[i].scrollTop === 0) usaIntroPlay(); else usaUpdate(); }
+    if (isRg) { if (rains && pages[i].scrollTop === 0) rgTitle(); else rgUpdate(); }
   }
 
   function enterStory(i) {
@@ -235,7 +328,7 @@
   function leaveStory() {
     if (!inStory) return;
     inStory = false; current = -1;
-    usaIntroStop();
+    usaIntroStop(); rgStop();
     closeDrawer();
     root.classList.remove('is-story');
     landing.inert = false; story.inert = true;
@@ -261,9 +354,15 @@
       usaPage.scrollTo({ top: usaTop(usaStep + d), behavior: rains ? 'smooth' : 'auto' });
       return;
     }
+    if (pages[current] === rgPage && rgTitleOn && d > 0) return;
+    if (pages[current] === rgPage && rgStep + d >= 0 && rgStep + d <= 5) {
+      lastNav = now;
+      rgPage.scrollTo({ top: rgTop(rgStep + d), behavior: rains ? 'smooth' : 'auto' });
+      return;
+    }
     var t = current + d;
     if (t < 0 || t >= pages.length) return;
-    enterAtEnd = (pages[t] === tlPage || pages[t] === usaPage) && d < 0;
+    enterAtEnd = isScrolly(pages[t]) && d < 0;
     lastNav = now; setHash(t);
   }
   function atEdge(d) {
@@ -276,7 +375,7 @@
     if (!inStory || Math.abs(e.deltaY) < 18) return;
     var d = e.deltaY > 0 ? 1 : -1;
     /* Let a timeline scroll finish before the same gesture can turn the page. */
-    if ((pages[current] === tlPage || pages[current] === usaPage) && Date.now() - tlScrolled < 320) return;
+    if (isScrolly(pages[current]) && Date.now() - tlScrolled < 320) return;
     if (atEdge(d)) step(d);
   }, { passive: true });
 
@@ -285,7 +384,7 @@
   story.addEventListener('touchend', function (e) {
     if (ty === null) return;
     var dy = ty - e.changedTouches[0].clientY, d = dy > 0 ? 1 : -1; ty = null;
-    if (Math.abs(dy) > 56 && atEdge(d) && ((pages[current] !== tlPage && pages[current] !== usaPage) || Date.now() - tlScrolled > 320)) step(d);
+    if (Math.abs(dy) > 56 && atEdge(d) && (!isScrolly(pages[current]) || Date.now() - tlScrolled > 320)) step(d);
   }, { passive: true });
 
   addEventListener('keydown', function (e) {
@@ -349,6 +448,8 @@
         else tlLayout();
         usaDrawn = {};
         if (inStory && pages[current] === usaPage) { usaStep = -1; usaUpdate(); }
+        rgDrawn = {};
+        if (inStory && pages[current] === rgPage) { rgStep = -1; rgUpdate(); }
       }, 180);
     });
   }

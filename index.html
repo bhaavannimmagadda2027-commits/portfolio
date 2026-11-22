@@ -94,6 +94,25 @@
     </div></div>
   </section>
 
+  <section class="page page-rest" data-form="rest" data-title="Restaurant project">
+    <div class="rg-track"><div class="rg-stage" data-art="0">
+      <h2 class="rg-title"><span>Application of my PepsiCo learnings in MBA projects</span></h2>
+      <div class="rg-art"><div class="rg-frame">
+        <canvas class="rg-scene" role="img" aria-label="Sand illustration of Shawarma Palace, then its billing counter with dine-in and Talabat orders"></canvas>
+        <button class="rg-dash" type="button" data-lb="assets/projects/restaurant/growth-planner.webp" data-cap="Restaurant Growth Planner and Dish Performance Forecast"><img src="assets/projects/restaurant/growth-planner.webp" alt="Restaurant Growth Planner and Dish Performance Forecast dashboards" width="1536" height="1024"></button>
+        <span class="rg-note mono">Illustrative figures</span>
+      </div></div>
+      <div class="rg-copy">
+        <p>The restaurant industry presents an interesting revenue growth challenge, with restaurants operating across two distinct sales channels 1) dine-in and 2) online delivery. Building on my learnings from PepsiCo's Revenue Growth Management framework, I envisioned a MarTech solution to help restaurants increase sales and profitability through better product mix, pricing and promotional strategies.</p>
+        <p>Channel Strategy: Unlike traditional RGM, restaurants need to optimize two demand channels independently. I structured the solution around helping restaurants grow dine-in sales through menu mix, pricing and promotions, while separately optimizing online sales through food delivery app - Talabat. This allows restaurants to prioritize different dishes across channels based on their growth opportunities.</p>
+        <p>Dish-Level Price Elasticity: Drawing from my experience in regression analysis and price elasticity at PepsiCo, I wanted to bring similar intelligence to individual restaurant dishes. The model estimates price and promotional elasticity separately for dine-in and online orders, identifying which dishes can sustain price increases and which respond better to promotional support.</p>
+        <p>Promotional Optimization: Leveraging historical dish-level sales, pricing, margins and promotional data, the framework identifies the right dish, price and promotional tactic for each day and daypart. It also accounts for product cannibalization and cross-channel demand shifts.</p>
+        <p>Competition Selection: Unlike retail, where competitor products can often be identified through relatively structured product categories, food delivery and quick-commerce platforms have vast catalogues with substitutes across categories: a burger may compete with pizza, pasta or even biryani on some occasions. I have deliberately excluded competitor restaurant data from the current model, both to respect platform data privacy and to avoid introducing significant uncertainty through poorly defined competitive sets. I am still working on competition selection logic for digital marketplaces with huge catalogues.</p>
+        <p>Finally, I envisioned coupling these elasticity insights with Gurobi optimization to build three decision engines: dine-in growth, Talabat growth and joint channel optimization; translating complex demand insights into actionable, restaurant-specific pricing and promotional calendars.</p>
+      </div>
+    </div></div>
+  </section>
+
   <section class="page" data-form="heaps" data-title="The short version">
     <div class="panel">
       <p class="kick mono r">Strategy lens <span>The short version</span></p>
@@ -351,6 +370,7 @@
 
 <noscript><style>html,body{overflow:auto;height:auto}#landing,#story{position:static;opacity:1;visibility:visible;background:#000}#landing{background:var(--cream)}.page{position:static;opacity:1;visibility:visible}.r{opacity:1}#stage,#sand,#labels,.pager,#rail{display:none}</style></noscript>
 <script src="sand.js"></script>
+<script src="scenes.js"></script>
 <script src="story.js"></script>
 </body>
 </html>
