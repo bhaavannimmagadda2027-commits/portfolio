@@ -1,4 +1,4 @@
-/* Landing, lens choice, page changes, case drawers and image viewer. */
+/* Landing, chapter tracks, page changes, case drawers and image viewer. */
 (function () {
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return [].slice.call((r || document).querySelectorAll(s)); };
@@ -275,15 +275,40 @@
   }, 70);
   function isScrolly(p) { return p === tlPage || p === usaPage || p === rgPage; }
 
+  /* Two parallel tracks. Each chapter sits on one, so the rail shows the crossings. */
+  function trackOf(p) { return p.dataset.track === 'technical' ? 'technical' : 'strategy'; }
+  var railHeads = ['strategy', 'technical'].map(function (name, k) {
+    var head = document.createElement('b'), line = document.createElement('em');
+    head.className = 'rail-head'; head.textContent = name; head.style.gridColumn = k + 1;
+    line.className = 'rail-line'; line.style.gridColumn = k + 1; line.style.gridRow = '2 / ' + (pages.length + 2);
+    rail.appendChild(head); rail.appendChild(line);
+    return head;
+  });
   pages.forEach(function (p, i) {
     $$('.r', p).forEach(function (el, k) { el.style.setProperty('--i', k); });
-    var b = document.createElement('button');
-    b.type = 'button'; b.setAttribute('aria-label', 'Go to ' + p.dataset.title);
+    var b = document.createElement('button'), lane = trackOf(p);
+    b.type = 'button'; b.setAttribute('aria-label', 'Go to ' + p.dataset.title + ', ' + lane);
+    b.style.gridColumn = lane === 'technical' ? 2 : 1; b.style.gridRow = i + 2;
     b.innerHTML = '<i></i><span></span>'; b.lastChild.textContent = p.dataset.title;
     b.addEventListener('click', function () { setHash(i); });
     rail.appendChild(b);
   });
   var dots = $$('button', rail);
+
+  /* After a strategy chapter with a technical side, the reader chooses where to go. */
+  var fork = $('#fork'), forkAt = 0, skipBack = {};
+  function hasTech(i) { return !!pages[i + 1] && trackOf(pages[i]) === 'strategy' && trackOf(pages[i + 1]) === 'technical'; }
+  function afterTech(i) { var t = i + 1; while (pages[t] && trackOf(pages[t]) === 'technical') t++; return Math.min(t, pages.length - 1); }
+  function openFork() {
+    $('#fork-done').textContent = pages[current].dataset.title;
+    $('#fork-tech-name').textContent = pages[current + 1].dataset.title;
+    $('#fork-skip-name').textContent = pages[afterTech(current)].dataset.title;
+    fork.hidden = false; forkAt = Date.now();
+    $('#fork-tech').focus({ preventScroll: true });
+  }
+  function closeFork() { fork.hidden = true; }
+  $('#fork-tech').addEventListener('click', function () { var t = current + 1; closeFork(); delete skipBack[afterTech(current)]; setHash(t); });
+  $('#fork-skip').addEventListener('click', function () { var from = current, t = afterTech(from); closeFork(); skipBack[t] = from; enterAtEnd = false; setHash(t); });
 
   function setHash(i) { location.hash = 'strategy/' + (i + 1); }
 
@@ -291,6 +316,7 @@
     i = Math.max(0, Math.min(pages.length - 1, i));
     if (i === current) return;
     current = i;
+    closeFork();
     usaIntroStop(); rgStop();
     pages.forEach(function (p, k) {
       p.classList.toggle('on', k === i);
@@ -303,8 +329,11 @@
     if (isRg) rgStep = -1;
     pages[i].scrollTop = enterAtEnd && (isTl || isUsa || isRg) ? pages[i].scrollHeight : 0;
     enterAtEnd = false;
+    railHeads[0].classList.toggle('on', trackOf(pages[i]) === 'strategy');
+    railHeads[1].classList.toggle('on', trackOf(pages[i]) === 'technical');
     dots.forEach(function (d, k) {
       d.classList.toggle('on', k === i);
+      d.classList.toggle('done', k < i);
       if (k === i) d.setAttribute('aria-current', 'step'); else d.removeAttribute('aria-current');
     });
     count.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(pages.length).padStart(2, '0');
@@ -328,6 +357,7 @@
   function leaveStory() {
     if (!inStory) return;
     inStory = false; current = -1;
+    closeFork();
     usaIntroStop(); rgStop();
     closeDrawer();
     root.classList.remove('is-story');
@@ -341,6 +371,8 @@
 
   function step(d) {
     var now = Date.now();
+    /* The choice is deliberate: scrolling down waits for a click, scrolling up goes back. */
+    if (!fork.hidden) { if (d < 0 && now - forkAt > 450) closeFork(); return; }
     if (!inStory || drawer.classList.contains('open') || viewer.open || now - lastNav < 850) return;
     /* Inside the timeline, keys and arrows go stop by stop before leaving the page. */
     if (pages[current] === tlPage && tlStop + d >= 0 && tlStop + d <= 3) {
@@ -360,7 +392,9 @@
       rgPage.scrollTo({ top: rgTop(rgStep + d), behavior: rains ? 'smooth' : 'auto' });
       return;
     }
+    if (d > 0 && hasTech(current)) { lastNav = now; openFork(); return; }
     var t = current + d;
+    if (d < 0 && skipBack[current] !== undefined) { t = skipBack[current]; delete skipBack[current]; }
     if (t < 0 || t >= pages.length) return;
     enterAtEnd = isScrolly(pages[t]) && d < 0;
     lastNav = now; setHash(t);

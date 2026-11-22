@@ -16,7 +16,7 @@
 <canvas id="sand" aria-hidden="true"></canvas>
 <div id="labels" aria-hidden="true"></div>
 
-<section id="landing" aria-label="Choose a lens">
+<section id="landing" aria-label="Introduction">
   <div class="l-top mono">
     <span>Portfolio · 2026</span>
     <span class="l-links">
@@ -30,8 +30,7 @@
       <p class="l-lead">I turn pricing and market data into revenue decisions.</p>
       <p class="l-tag">I believe that lasting impact comes from being proactive, taking ownership and being client centric</p>
       <div class="lenses">
-        <button class="lens" id="enter" type="button"><b>Explore my work</b><small>Strategy lens</small><span class="go" aria-hidden="true">→</span></button>
-        <button class="lens" type="button" disabled><b>Technical lens</b><small>Opening soon</small></button>
+        <button class="lens" id="enter" type="button"><b>Explore my work</b><small>Strategy and technical</small><span class="go" aria-hidden="true">→</span></button>
       </div>
     </div>
     <figure class="l-photo"><img src="assets/me/headshot.jpg" alt="Portrait of Bhaavan Nimmagadda in a navy suit" width="1200" height="1800"></figure>
@@ -44,12 +43,22 @@
   </ul>
 </section>
 
-<main id="story" aria-label="Strategy lens">
+<main id="story" aria-label="Portfolio">
   <div class="bar mono">
-    <button id="home" type="button">← Change lens</button>
+    <button id="home" type="button">← Home</button>
     <a href="assets/Resume_Bhaavan_Nimmagadda.pdf" target="_blank" rel="noopener">View resume</a>
   </div>
   <nav id="rail" aria-label="Chapters"></nav>
+  <div id="fork" role="dialog" aria-label="Choose what comes next" hidden>
+    <div class="fork-box">
+      <p class="kick mono"><span id="fork-done"></span> strategy complete</p>
+      <h2>Where to next?</h2>
+      <div class="fork-acts">
+        <button id="fork-tech" type="button"><b>See the technical side</b><small id="fork-tech-name"></small></button>
+        <button id="fork-skip" type="button"><b>Skip to next learning</b><small id="fork-skip-name"></small></button>
+      </div>
+    </div>
+  </div>
   <div class="pager mono">
     <button id="prev" type="button" aria-label="Previous page">↑</button>
     <button id="next" type="button" aria-label="Next page">↓</button>
@@ -58,7 +67,7 @@
 
   <section class="page page-tower" data-form="tower" data-title="The build">
     <div class="tower-head">
-      <p class="kick mono">Strategy lens <span>The build</span></p>
+      <p class="kick mono">Strategy <span>The build</span></p>
       <h2 class="sr">A career built like a skyscraper, on a strong foundation</h2>
     </div>
     <div class="tower">
@@ -83,7 +92,7 @@
     </div></div>
   </section>
 
-  <section class="page page-usa" data-form="usa0" data-title="PepsiCo pricing">
+  <section class="page page-usa" data-form="usa0" data-title="PepsiCo">
     <div class="usa-track"><div class="usa-stage" data-step="0">
       <h2 class="sr">How I priced PepsiCo beverages against competitors across the United States</h2>
       <div class="usa-intro" aria-hidden="true"><p><b><i class="beat b1">Associate Manager</i><i class="beat b2">, Revenue Growth Management</i><i class="beat b3">, <span class="co">PepsiCo</span></i></b><span class="mono beat b4">June 2024 to May 2026</span></p></div>
@@ -94,7 +103,22 @@
     </div></div>
   </section>
 
-  <section class="page page-rest" data-form="rest" data-title="Restaurant project">
+  <section class="page" data-form="surface" data-title="PepsiCo" data-track="technical">
+    <div class="panel">
+      <p class="kick mono r">PepsiCo <span>Technical</span></p>
+      <h2 class="r">Regression and price elasticity across <em>180 SKUs.</em></h2>
+      <p class="lede r">I ran price elasticity analysis across the USA, grouped own and competitor prices into one variable, and built a Python + AI tool that executes the regression models.</p>
+      <div class="nums r">
+        <div><b>180</b><span>SKUs in the elasticity analysis</span></div>
+        <div><b>+36%</b><span>benchmarking accuracy</span></div>
+        <div><b>+20%</b><span>sales-attribution accuracy</span></div>
+        <div><b>160</b><span>annual hours saved by the tool</span></div>
+      </div>
+      <button class="cue r" type="button" data-case="case-pepsico">Open the case →</button>
+    </div>
+  </section>
+
+  <section class="page page-rest" data-form="rest" data-title="MBA application">
     <div class="rg-track"><div class="rg-stage" data-art="0">
       <h2 class="rg-title"><span>Application of my PepsiCo learnings in MBA projects</span></h2>
       <div class="rg-art"><div class="rg-frame">
@@ -115,7 +139,7 @@
 
   <section class="page" data-form="heaps" data-title="The short version">
     <div class="panel">
-      <p class="kick mono r">Strategy lens <span>The short version</span></p>
+      <p class="kick mono r">Strategy <span>The short version</span></p>
       <h2 class="r">Six years, three firms. <em>I built one of them myself.</em></h2>
       <p class="lede r">Consulting at ZS, commercial strategy at PepsiCo, then a D2C brand from zero. I bring structure to ambiguous problems and tie the work to a number that moved.</p>
       <div class="nums r">
@@ -139,21 +163,6 @@
         <div><b>−2%</b><span>patient drop-off from the drug</span></div>
       </div>
       <button class="cue r" type="button" data-case="case-zs">Open the case →</button>
-    </div>
-  </section>
-
-  <section class="page" data-form="surface" data-title="PepsiCo">
-    <div class="panel">
-      <p class="kick mono r">Jun ’24 – May ’26 <span>Growth</span></p>
-      <h2 class="r">At PepsiCo, pricing across <em>180 SKUs</em> added $4M in sales.</h2>
-      <p class="lede r">Associate Manager, Revenue Growth Management, Hyderabad. I used regression to show which prices and promotion weeks paid back in the US.</p>
-      <div class="nums r">
-        <div><b>$4M</b><span>incremental sales</span></div>
-        <div><b>+36%</b><span>benchmarking accuracy</span></div>
-        <div><b>+20%</b><span>sales-attribution accuracy</span></div>
-        <div><b>+5%</b><span>promo ROI</span></div>
-      </div>
-      <button class="cue r" type="button" data-case="case-pepsico">Open the case →</button>
     </div>
   </section>
 
@@ -188,7 +197,7 @@
     </div>
   </section>
 
-  <section class="page" data-form="decks" data-title="AI-built systems">
+  <section class="page" data-form="decks" data-title="AI-built systems" data-track="technical">
     <div class="panel">
       <p class="kick mono r">Alongside the MBA <span>Operations</span></p>
       <h2 class="r">Four working systems that <em>replace manual work.</em></h2>
