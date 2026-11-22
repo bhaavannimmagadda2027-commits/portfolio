@@ -103,18 +103,17 @@
     </div></div>
   </section>
 
-  <section class="page" data-form="surface" data-title="PepsiCo" data-track="technical">
-    <div class="panel">
-      <p class="kick mono r">PepsiCo <span>Technical</span></p>
-      <h2 class="r">Regression and price elasticity across <em>180 SKUs.</em></h2>
-      <p class="lede r">I ran price elasticity analysis across the USA, grouped own and competitor prices into one variable, and built a Python + AI tool that executes the regression models.</p>
-      <div class="nums r">
-        <div><b>180</b><span>SKUs in the elasticity analysis</span></div>
-        <div><b>+36%</b><span>benchmarking accuracy</span></div>
-        <div><b>+20%</b><span>sales-attribution accuracy</span></div>
-        <div><b>160</b><span>annual hours saved by the tool</span></div>
+  <section class="page page-tech" data-form="tech" data-title="PepsiCo" data-track="technical">
+    <div class="ta-stage">
+      <h2 class="sr">The RGM PPT Agent I built at PepsiCo</h2>
+      <div class="ta-copy">
+        <p>Every week, the RGM team rebuilt the same performance deck by hand for each of 40+ retail geographies. An analyst would switch the geography in the master Excel model, wait for it to recalculate, then copy over a dozen tables and charts. That meant days of repetitive work, with plenty of room for copy-paste errors.</p>
+        <p>I built a Python agent that does the whole job. Users open a simple dashboard, choose their geographies and click Launch. The agent opens the Excel model, sets each geography, recalculates and fills every table, text box and chart into the right slide of the PowerPoint template.</p>
+        <p>All the slide logic lives in a mapping table inside Excel, so analysts can add or change slides without touching code. Pasting from Excel into PowerPoint is often unreliable, so the agent tries four capture methods in turn. If one geography fails, the rest of the batch still runs.</p>
+        <p>The run streams live to the dashboard, slide by slide, and finishes with one consistent, ready-to-review deck per geography.</p>
+        <p>That is how I turned a multi-day reporting cycle into a single click.</p>
       </div>
-      <button class="cue r" type="button" data-case="case-pepsico">Open the case →</button>
+      <div class="ta-art"><button class="ta-frame" type="button" data-lb="assets/projects/pepsico/rgm-ppt-agent.webp"><img src="assets/projects/pepsico/rgm-ppt-agent.webp" alt="RGM PPT Agent dashboard with configuration fields and a live agent log" width="2000" height="1142"></button></div>
     </div>
   </section>
 

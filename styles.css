@@ -284,6 +284,21 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
   .usa-ann{left:0;right:0;top:calc(100% + 86px);font-size:16px}
   .usa-stage:not([data-step="0"]):not([data-step="1"]) .usa-key{opacity:1}
 }
+.page.page-tech{display:block;padding:0;overflow:hidden}
+.page.page-tech.on{transition:none}
+.ta-stage{position:relative;height:100%;overflow:hidden}
+.ta-copy{position:absolute;z-index:1;left:clamp(16px,2.6vw,36px);right:calc(50% + 28px);top:clamp(62px,8.5vh,80px);bottom:70px;display:flex;flex-direction:column;justify-content:safe center;gap:clamp(8px,1.6vh,16px);overflow:hidden}
+.ta-copy p{flex:none;margin:0;text-align:justify;font:400 var(--ta-size,clamp(16px,min(1.5vw,2.7vh),24px))/1.28 var(--serif);color:var(--text)}
+.ta-art{position:absolute;left:calc(50% + 8px);right:clamp(62px,5.4vw,80px);top:clamp(62px,8.5vh,80px);bottom:70px;display:flex;align-items:center;justify-content:center;container-type:size}
+.ta-frame{display:block;width:min(100cqw,175.131cqh);aspect-ratio:2000/1142;padding:0;border:0;background:none;cursor:zoom-in;opacity:0;pointer-events:none;transition:opacity .2s}
+.ta-frame img{display:block;width:100%;height:100%;object-fit:contain}
+.ta-stage.landed .ta-frame{opacity:1;pointer-events:auto;transition:opacity .7s}
+@media (max-width:860px){
+  .ta-copy{left:16px;right:16px;top:60px;bottom:calc(92px + min(calc((100vw - 32px)*0.5710),30vh));justify-content:flex-start}
+  .ta-copy p{font-size:var(--ta-size,clamp(14px,3.9vw,16px));line-height:1.25}
+  .ta-art{left:16px;right:16px;top:auto;bottom:80px;height:min(calc((100vw - 32px)*0.5710),30vh)}
+}
+@media (prefers-reduced-motion:reduce){.ta-frame{transition:none!important}}
 @media (prefers-reduced-motion:reduce){.usa-g,.usa-ann,.usa-copy p,.usa-borders,.usa-nation,.rg-scene,.rg-dash,.rg-note,.rg-copy p{transition:none!important}}
 
 /* Restaurant chapter */

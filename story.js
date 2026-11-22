@@ -296,6 +296,31 @@
     }, 3550));
   }
   rgPage.addEventListener('scroll', function () { tlScrolled = Date.now(); rgUpdate(); }, { passive: true });
+  /* PepsiCo technical: the text is there at once, the dashboard rains in beside it. */
+  var taPage = $('.page-tech'), taStage = $('.ta-stage', taPage), taBox = $('.ta-copy', taPage), taFrame = $('.ta-frame', taPage), taImg = $('img', taFrame), taLand = 0, taDrawn = false;
+  function taFit() {
+    taBox.style.removeProperty('--ta-size');
+    if (!taBox.clientHeight) return;
+    var s = parseFloat(getComputedStyle($('p', taBox)).fontSize);
+    while (s > 12 && taBox.scrollHeight > taBox.clientHeight) { s -= .25; taBox.style.setProperty('--ta-size', s + 'px'); }
+  }
+  if (document.fonts) document.fonts.ready.then(function () { if (pages[current] === taPage) taFit(); });
+  function taShow() {
+    taFit();
+    taStage.classList.remove('landed');
+    clearTimeout(taLand);
+    if (!taImg.complete) {
+      taImg.addEventListener('load', function () { if (pages[current] === taPage) taShow(); }, { once: true });
+      return;
+    }
+    taLand = setTimeout(function () { taStage.classList.add('landed'); }, rains ? 2700 : 0);
+    if (!hasSand || !taImg.naturalWidth) return;
+    if (!taDrawn) taDrawn = Sand.writeForm('tech', function (line, mark, box) {
+      var r = taFrame.getBoundingClientRect();
+      [line, mark].forEach(function (c) { c.drawImage(taImg, r.left - box.left, r.top - box.top, r.width, r.height); });
+    });
+    if (taDrawn) Sand.to('tech');
+  }
   function isScrolly(p) { return p === tlPage || p === usaPage || p === rgPage; }
 
   /* Two parallel tracks. Each chapter sits on one, so the rail shows the crossings. */
@@ -346,7 +371,7 @@
       p.setAttribute('aria-hidden', k === i ? 'false' : 'true');
       p.inert = k !== i;
     });
-    var isTl = pages[i] === tlPage, isUsa = pages[i] === usaPage, isRg = pages[i] === rgPage;
+    var isTl = pages[i] === tlPage, isUsa = pages[i] === usaPage, isRg = pages[i] === rgPage, isTa = pages[i] === taPage;
     if (isTl) tlStop = -1;
     if (isUsa) usaStep = -1;
     if (isRg) { rgStep = -1; rgFitCopy(); }
@@ -362,10 +387,11 @@
     count.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(pages.length).padStart(2, '0');
     $('#prev').disabled = i === 0;
     $('#next').disabled = i === pages.length - 1;
-    if (hasSand && !isUsa && !isRg && (!isTl || tlReady)) { if (isTl) tlWrite(); Sand.to(pages[i].dataset.form); }
+    if (hasSand && !isUsa && !isRg && !isTa && (!isTl || tlReady)) { if (isTl) tlWrite(); Sand.to(pages[i].dataset.form); }
     if (isTl) tlUpdate();
     if (isUsa) { if (rains && pages[i].scrollTop === 0) usaIntroPlay(); else usaUpdate(); }
     if (isRg) { if (rains && pages[i].scrollTop === 0) rgTitle(); else rgUpdate(); }
+    if (isTa) taShow();
   }
 
   function enterStory(i) {
@@ -507,6 +533,8 @@
         if (inStory && pages[current] === usaPage) { usaStep = -1; usaUpdate(); }
         rgDrawn = {};
         if (inStory && pages[current] === rgPage) { rgFitCopy(); rgStep = -1; rgUpdate(); }
+        taDrawn = false;
+        if (inStory && pages[current] === taPage) taShow();
       }, 180);
     });
   }
