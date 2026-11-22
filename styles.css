@@ -214,7 +214,6 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .usa-role{position:absolute;z-index:1;top:clamp(62px,8.5vh,80px);left:calc(50% + 8px);right:clamp(46px,5vw,72px);margin:0;text-align:right}
 .usa-role b{display:block;font:400 clamp(16px,1.4vw,22px)/1.1 var(--serif);color:var(--text)}
 .usa-role>span{display:block;margin-top:4px;font-size:11px;color:var(--gold)}
-.usa-role .co,.usa-intro .co{font-family:var(--sans);font-size:.88em;letter-spacing:.01em}
 .usa-intro{display:none;position:absolute;inset:0;z-index:3;align-items:center;justify-content:center;padding:0 clamp(20px,6vw,90px);background:var(--black);pointer-events:none}
 .usa-stage.intro .usa-intro{display:flex}
 .usa-intro p{width:fit-content;margin:0}
