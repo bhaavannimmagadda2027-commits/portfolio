@@ -88,6 +88,10 @@
   function usaLogo(g, s) { svgEl('image', { href: USA_LOGOS[s[0]], x: s[1] - s[3] / 2, y: s[2] - s[4] / 2, width: s[3], height: s[4] }, g); }
   function usaBuild() {
     var b = usaData.box;
+    /* Brands that survive the competition cut stay exactly where they were on the fuller map. */
+    usaData.accounts.forEach(function (city) {
+      city.b = city.b.map(function (s) { return city.a.filter(function (x) { return x[0] === s[0]; })[0] || s; });
+    });
     usaSvg.setAttribute('viewBox', b.join(' '));
     svgEl('path', { class: 'usa-borders', d: usaData.borders }, usaSvg);
     svgEl('path', { class: 'usa-nation', d: usaData.nation }, usaSvg);
@@ -109,8 +113,9 @@
       if (step >= 2) { line.lineWidth = 1.2 / k; line.stroke(new Path2D(usaData.borders)); }
       line.lineWidth = 1.9 / k; line.stroke(new Path2D(usaData.nation));
       var list = step < 2 ? USA_BIG[step] : step === 4 ? usaData.cities : [];
-      if (step === 2 || step === 3) usaData.accounts.forEach(function (city) {
-        city[['a', 'b'][step - 2]].forEach(function (s) { list.push(s); });
+      /* The two competition maps share one sand layer: only the brands on both are in the sand. */
+      if (step === 2) usaData.accounts.forEach(function (city) {
+        city.b.forEach(function (s) { list.push(s); });
       });
       list.forEach(function (s) {
         var im = usaImgs[s[0]], f = Math.min(s[3] / im.naturalWidth, s[4] / im.naturalHeight), w = im.naturalWidth * f, h = im.naturalHeight * f;
@@ -121,7 +126,8 @@
   function usaMax() { return Math.max(1, usaPage.scrollHeight - usaPage.clientHeight); }
   function usaTop(k) { return k >= 4 ? usaMax() : Math.ceil(usaMax() * k / 5) + 2; }
   /* Picture for each sentence. The PepsiCo-only map is retired; the last two sentences share the final map. */
-  var USA_MAP = [1, 2, 3, 4, 4];
+  var USA_MAP = [1, 2, 3, 4, 4], usaQuick = 0;
+  function usaSandOf(layer) { return layer === 3 ? 2 : layer; }
   /* Opening title: builds in four beats, holds for reading, then moves to its place at the top right. */
   var usaIntro = $('.usa-intro', usaPage), usaIntroOn = false, usaIntroTimers = [], usaIntroRun = 0;
   function usaIntroStop() {
@@ -164,17 +170,26 @@
     if (usaPage.scrollTop >= usaMax() - 2) k = 4;
     if (k === usaStep) return;
     var layer = USA_MAP[k], same = usaStep >= 0 && USA_MAP[usaStep] === layer;
+    var swap = !same && usaStep >= 0 && usaSandOf(USA_MAP[usaStep]) === usaSandOf(layer);
     usaStep = k;
     usaCopy.forEach(function (c, i) { c.classList.toggle('on', i === k); c.classList.toggle('seen', i <= k); });
     usaStage.classList.toggle('final', k === 4);
     if (same) return;
-    usaStage.classList.remove('landed');
+    /* Fuller map to relevant competitors: no sand, the map holds still and the extra logos drop away. */
+    if (swap) {
+      usaStage.classList.add('quick');
+      usaStage.dataset.step = layer;
+      clearTimeout(usaQuick);
+      usaQuick = setTimeout(function () { usaStage.classList.remove('quick'); }, 220);
+      return;
+    }
+    usaStage.classList.remove('landed', 'quick');
     clearTimeout(usaLand);
     usaLand = setTimeout(function () { usaStage.classList.add('landed'); }, rains ? 2700 : 0);
     usaStage.dataset.step = layer;
     if (!usaData || !hasSand) return;
-    var name = 'usa' + layer;
-    if (!usaDrawn[name]) usaDrawn[name] = Sand.writeForm(name, usaDraw(layer));
+    var name = 'usa' + usaSandOf(layer);
+    if (!usaDrawn[name]) usaDrawn[name] = Sand.writeForm(name, usaDraw(usaSandOf(layer)));
     if (usaDrawn[name]) Sand.to(name);
   }
   usaPage.addEventListener('scroll', function () { tlScrolled = Date.now(); usaUpdate(); }, { passive: true });
