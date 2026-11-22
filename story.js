@@ -184,40 +184,57 @@
     if (pages[current] === usaPage) { usaStep = -1; usaUpdate(); }
   }).catch(function () {});
 
-  /* Restaurant chapter: a title, then six scroll steps over three sand pictures. */
+  /* MBA chapter: a title, then six scroll steps over three sand pictures. Text builds up. */
   var rgPage = $('.page-rest'), rgStage = $('.rg-stage', rgPage), rgCopy = $$('.rg-copy p', rgPage), rgCanvas = $('.rg-scene', rgPage), rgFrame = $('.rg-frame', rgPage);
-  var RG_ART = [0, 1, 2, 2, 2, 2], rgStep = -1, rgLand = 0, rgGo = 0, rgDoorAt = 0, rgDrawn = {}, rgTitleOn = false, rgTitleTimers = [];
-  var rgDash = new Image(); rgDash.src = 'assets/projects/restaurant/growth-planner.webp';
+  var RG_ART = [0, 1, 2, 2, 2, 2], rgStep = -1, rgLand = 0, rgDrawn = {}, rgTitleOn = false, rgTitleTimers = [];
+  var rgBox = $('.rg-copy', rgPage), rgPhone = matchMedia('(max-width:860px)');
+  var rgImgs = ['shawarma-palace', 'channel-screen', 'growth-planner'].map(function (n) {
+    var im = new Image(); im.src = 'assets/projects/restaurant/' + n + '.webp'; return im;
+  });
+  /* Whole picture, centred, never stretched. */
+  function rgPlace(c, im, W, H) {
+    var s = Math.min(W / im.naturalWidth, H / im.naturalHeight), w = im.naturalWidth * s, h = im.naturalHeight * s;
+    c.drawImage(im, (W - w) / 2, (H - h) / 2, w, h);
+  }
   function rgPaint(layer) {
     if (layer > 1) return;
     var r = rgFrame.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1), w = Math.round(r.width * d), h = Math.round(r.height * d);
     if (!w || !h) return;
     if (rgCanvas.width !== w || rgCanvas.height !== h) { rgCanvas.width = w; rgCanvas.height = h; }
-    var c = rgCanvas.getContext('2d'), k = w / Scenes.W, now = performance.now();
-    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, w, h); c.setTransform(k, 0, 0, k, 0, 0);
-    if (layer === 1) Scenes.counter(c);
-    else Scenes.shop(c, rains ? now / 1000 : 0, rgDoorAt ? Math.min(1, (now - rgDoorAt) / 450) : 0);
+    var c = rgCanvas.getContext('2d');
+    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, w, h);
+    rgPlace(c, rgImgs[layer], w, h);
   }
   function rgDraw(layer) {
     return function (line, mark, box) {
-      var r = rgFrame.getBoundingClientRect(), k = r.width / Scenes.W;
+      var r = rgFrame.getBoundingClientRect();
       [line, mark].forEach(function (c) {
-        c.setTransform(k, 0, 0, k, r.left - box.left, r.top - box.top);
-        if (layer === 2) c.drawImage(rgDash, 0, 0, Scenes.W, Scenes.H);
-        else if (layer === 1) Scenes.counter(c);
-        else Scenes.shop(c);
+        c.setTransform(1, 0, 0, 1, r.left - box.left, r.top - box.top);
+        rgPlace(c, rgImgs[layer], r.width, r.height);
       });
     };
   }
+  /* One text size for the whole chapter, so all six paragraphs fit and nothing shifts as they build up. */
+  function rgFitCopy() {
+    rgBox.style.removeProperty('--rg-size');
+    if (rgPhone.matches || !rgBox.clientHeight) return;
+    var s = parseFloat(getComputedStyle(rgCopy[0]).fontSize);
+    while (s > 12 && rgBox.scrollHeight > rgBox.clientHeight) { s -= .25; rgBox.style.setProperty('--rg-size', s + 'px'); }
+  }
   function rgMark(k) {
-    var art = RG_ART[k], group = art < 2 ? 0 : 1;
     rgCopy.forEach(function (c, i) {
       c.classList.toggle('on', i === k);
-      c.classList.toggle('seen', i <= k && (RG_ART[i] < 2 ? 0 : 1) === group);
+      c.classList.toggle('seen', i <= k);
     });
+    /* Phones cannot hold all six at once: earlier text stays above and the newest comes into view. */
+    var p = rgCopy[k], top = Math.max(0, Math.min(p.offsetTop, p.offsetTop + p.offsetHeight - rgBox.clientHeight));
+    rgBox.scrollTo({ top: top, behavior: rains ? 'smooth' : 'auto' });
   }
   function rgShow(layer, k) {
-    rgDoorAt = 0;
+    if (!rgImgs[layer].complete) {
+      rgImgs[layer].addEventListener('load', function () { if (pages[current] === rgPage && rgStep === k) rgShow(layer, k); }, { once: true });
+      return;
+    }
     rgStage.classList.remove('landed');
     rgStage.dataset.art = layer;
     rgMark(k);
@@ -236,21 +253,14 @@
     if (k === rgStep) return;
     var was = rgStep, layer = RG_ART[k];
     rgStep = k;
-    clearTimeout(rgGo); rgDoorAt = 0;
     if (was >= 0 && RG_ART[was] === layer) { rgMark(k); return; }
-    /* Walking in: the door swings open before the sand moves to the counter. */
-    if (rains && was === 0 && k === 1 && rgStage.classList.contains('landed')) {
-      rgDoorAt = performance.now();
-      rgGo = setTimeout(function () { rgShow(layer, k); }, 520);
-      return;
-    }
     rgShow(layer, k);
   }
   function rgMax() { return Math.max(1, rgPage.scrollHeight - rgPage.clientHeight); }
   function rgTop(k) { return k >= 5 ? rgMax() : Math.ceil(rgMax() * k / 6) + 2; }
   function rgStop() {
     rgTitleTimers.forEach(clearTimeout); rgTitleTimers = [];
-    clearTimeout(rgGo); clearTimeout(rgLand); rgDoorAt = 0;
+    clearTimeout(rgLand);
     rgTitleOn = false; rgPage.style.overflowY = '';
     rgStage.classList.remove('titled', 'title-out');
   }
@@ -270,9 +280,6 @@
     }, 3550));
   }
   rgPage.addEventListener('scroll', function () { tlScrolled = Date.now(); rgUpdate(); }, { passive: true });
-  if (rains) setInterval(function () {
-    if (pages[current] === rgPage && !document.hidden && rgStage.dataset.art === '0' && rgStage.classList.contains('landed')) rgPaint(0);
-  }, 70);
   function isScrolly(p) { return p === tlPage || p === usaPage || p === rgPage; }
 
   /* Two parallel tracks. Each chapter sits on one, so the rail shows the crossings. */
@@ -326,7 +333,7 @@
     var isTl = pages[i] === tlPage, isUsa = pages[i] === usaPage, isRg = pages[i] === rgPage;
     if (isTl) tlStop = -1;
     if (isUsa) usaStep = -1;
-    if (isRg) rgStep = -1;
+    if (isRg) { rgStep = -1; rgFitCopy(); }
     pages[i].scrollTop = enterAtEnd && (isTl || isUsa || isRg) ? pages[i].scrollHeight : 0;
     enterAtEnd = false;
     railHeads[0].classList.toggle('on', trackOf(pages[i]) === 'strategy');
@@ -483,7 +490,7 @@
         usaDrawn = {};
         if (inStory && pages[current] === usaPage) { usaStep = -1; usaUpdate(); }
         rgDrawn = {};
-        if (inStory && pages[current] === rgPage) { rgStep = -1; rgUpdate(); }
+        if (inStory && pages[current] === rgPage) { rgFitCopy(); rgStep = -1; rgUpdate(); }
       }, 180);
     });
   }

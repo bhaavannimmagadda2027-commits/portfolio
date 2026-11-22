@@ -292,9 +292,10 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .rg-title span{opacity:0;animation:role-beat .45s ease .1s forwards}
 .rg-stage.titled .rg-title{display:flex}
 .rg-stage.title-out .rg-title{opacity:0;transition:opacity .45s}
-.rg-copy{position:absolute;z-index:1;left:clamp(16px,2.6vw,36px);right:calc(50% + 28px);top:clamp(62px,8.5vh,80px);bottom:70px;display:flex;flex-direction:column;justify-content:center;gap:clamp(8px,1.5vh,16px)}
-.rg-copy p{display:none;margin:0;text-align:justify;font:400 clamp(15px,min(1.34vw,2.34vh),22px)/1.26 var(--serif);color:var(--text);opacity:0;transition:opacity .25s}
-.rg-copy p.seen{display:block}
+.rg-copy{position:absolute;z-index:1;left:clamp(16px,2.6vw,36px);right:calc(50% + 28px);top:clamp(62px,8.5vh,80px);bottom:70px;display:flex;flex-direction:column;justify-content:flex-start;gap:clamp(7px,1.3vh,14px);overflow:hidden}
+.rg-copy p{flex:none;visibility:hidden;margin:0;text-align:justify;font:400 var(--rg-size,clamp(15px,min(1.34vw,2.34vh),22px))/1.26 var(--serif);color:var(--text);opacity:0;transition:opacity .25s}
+.rg-copy p.seen{visibility:visible}
+.rg-copy b{font-weight:400;color:var(--gold)}
 .rg-copy p.seen:not(.on){opacity:1}
 .rg-stage.landed .rg-copy p.on{opacity:1;transition:opacity .7s}
 .rg-art{position:absolute;left:calc(50% + 8px);right:clamp(62px,5.4vw,80px);top:clamp(62px,8.5vh,80px);bottom:70px;display:flex;align-items:center;justify-content:center;container-type:size}
@@ -309,9 +310,8 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .rg-stage.landed[data-art="1"] .rg-note{opacity:1}
 @media (max-width:860px){
   .page.page-rest{padding:0}
-  .rg-copy{display:block;left:16px;right:16px;top:60px;bottom:calc(92px + (100vw - 32px)/1.5)}
-  .rg-copy p{position:absolute;left:0;right:0;top:0;font-size:clamp(15px,4.3vw,17px);line-height:1.25}
-  .rg-copy p.seen:not(.on){display:none}
+  .rg-copy{left:16px;right:16px;top:60px;bottom:calc(92px + (100vw - 32px)/1.5)}
+  .rg-copy p{font-size:clamp(14px,3.9vw,16px);line-height:1.25}
   .rg-art{left:16px;right:16px;top:auto;bottom:80px;height:calc((100vw - 32px)/1.5)}
   .rg-frame{width:100%}
   .rg-note{bottom:-16px}
