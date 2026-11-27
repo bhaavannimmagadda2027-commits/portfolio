@@ -1,0 +1,674 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bhaavan Nimmagadda — Strategy &amp; Analytics</title>
+<meta name="description" content="Bhaavan Nimmagadda — strategy and analytics leader with over 5 years in consulting and analytics at PepsiCo and ZS Associates, and co-founder of Recovery Company.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,400&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#14161f;--ink-2:#2a2d3a;--paper:#f4efe6;--paper-2:#ebe3d4;
+  --accent:#e2502b;--accent-2:#f2a541;--muted:#6b6658;--line:rgba(20,22,31,.14);
+  --display:"Fraunces",Georgia,serif;--body:"Inter",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--body);font-size:17px;line-height:1.65;color:var(--ink);background:var(--paper);overflow-x:hidden;overflow-wrap:anywhere}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:100;opacity:.07;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+img,svg,video{max-width:100%;height:auto;display:block}
+a{color:inherit}
+.wrap{width:100%;max-width:1200px;margin:0 auto;padding:0 clamp(20px,4vw,48px)}
+
+/* NAV */
+header{position:sticky;top:0;z-index:50;border-bottom:1px solid var(--line)}
+header::before{content:"";position:absolute;inset:0;z-index:-1;background:rgba(244,239,230,.86);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.brand{font-family:var(--display);font-weight:700;font-size:1.25rem;text-decoration:none;letter-spacing:-.02em}
+.nav{display:flex;align-items:center;justify-content:space-between;min-height:64px;gap:16px}
+.brand span{color:var(--accent)}
+.nav-links{display:flex;gap:4px;list-style:none;flex-wrap:wrap}
+.nav-links a{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border-radius:999px;text-decoration:none;font-size:.92rem;font-weight:500;transition:background .25s,color .25s}
+.nav-links a:hover{background:var(--ink);color:var(--paper)}
+#menu-toggle{position:absolute;opacity:0;pointer-events:none}
+.menu-btn{display:none;min-height:44px;min-width:44px;align-items:center;justify-content:center;border:1px solid var(--ink);border-radius:999px;padding:0 16px;font-weight:600;font-size:.9rem;cursor:pointer}
+
+/* HERO */
+.hero{position:relative;padding:clamp(48px,8vw,110px) 0 clamp(70px,10vw,130px);overflow:hidden}
+.hero::after{content:"";position:absolute;right:-10%;top:-20%;width:60%;aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle at 40% 40%,rgba(242,165,65,.55),rgba(226,80,43,.25) 45%,transparent 70%);filter:blur(10px);z-index:0}
+.hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:1.35fr .9fr;gap:clamp(32px,5vw,72px);align-items:center}
+.eyebrow{font-family:var(--mono);font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);display:inline-flex;align-items:center;gap:10px}
+.eyebrow::before{content:"";width:34px;height:2px;background:var(--accent)}
+h1{font-family:var(--display);font-weight:300;font-size:clamp(3rem,9vw,7.4rem);line-height:.92;letter-spacing:-.045em;margin:22px 0 28px}
+h1 em{font-style:italic;font-weight:400;color:var(--accent)}
+h1 strong{font-weight:700;display:block}
+.lede{font-size:clamp(1.08rem,1.6vw,1.3rem);max-width:36ch;color:var(--ink-2)}
+.lede b{font-weight:600;background:linear-gradient(transparent 62%,rgba(242,165,65,.45) 62%)}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}
+.btn{display:inline-flex;align-items:center;gap:10px;min-height:48px;padding:0 22px;border-radius:999px;font-weight:600;font-size:.95rem;text-decoration:none;border:1.5px solid var(--ink);transition:transform .25s,background .25s,color .25s}
+.btn:hover{transform:translateY(-3px)}
+.btn.solid{background:var(--ink);color:var(--paper)}
+.btn.solid:hover{background:var(--accent);border-color:var(--accent)}
+.btn.ghost:hover{background:var(--ink);color:var(--paper)}
+.btn svg{width:18px;height:18px}
+.portrait{position:relative;justify-self:end;width:100%;max-width:400px;perspective:900px}
+.portrait .frame{position:relative;border-radius:200px 200px 24px 24px;overflow:hidden;border:2px solid var(--ink);box-shadow:14px 14px 0 var(--accent);transform:rotate(1.5deg);transition:transform .6s cubic-bezier(.2,.8,.2,1),rotate .35s ease-out}
+.portrait:hover .frame{transform:rotate(0) translateY(-6px)}
+.portrait img{width:100%;aspect-ratio:4/5;object-fit:cover;filter:saturate(1.05) contrast(1.03)}
+.badge{position:absolute;left:-26px;bottom:34px;background:var(--paper);border:2px solid var(--ink);border-radius:18px;padding:12px 16px;font-size:.82rem;line-height:1.35;max-width:210px;transform:rotate(-4deg);box-shadow:6px 6px 0 var(--ink)}
+.badge b{display:block;font-family:var(--display);font-size:1.35rem;color:var(--accent)}
+.fade{animation:rise .9s cubic-bezier(.2,.8,.2,1) both}
+.d1{animation-delay:.08s}.d2{animation-delay:.18s}.d3{animation-delay:.3s}.d4{animation-delay:.42s}
+@keyframes rise{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+
+/* MARQUEE */
+.ticker{background:var(--ink);color:var(--paper);overflow:hidden;border-block:2px solid var(--ink)}
+.ticker-track{display:flex;gap:48px;white-space:nowrap;padding:16px 0;animation:slide 38s linear infinite;width:max-content}
+.ticker span{font-family:var(--display);font-style:italic;font-size:clamp(1.1rem,2.2vw,1.6rem)}
+.ticker i{color:var(--accent-2);font-style:normal}
+@keyframes slide{to{transform:translateX(-50%)}}
+
+/* SECTIONS */
+section{padding:clamp(70px,10vw,130px) 0;position:relative}
+.sec-head{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:clamp(20px,4vw,60px);align-items:end;margin-bottom:clamp(40px,6vw,72px)}
+h2{font-family:var(--display);font-weight:500;font-size:clamp(2.2rem,5.4vw,4.2rem);line-height:1;letter-spacing:-.035em}
+h2 em{color:var(--accent);font-weight:300}
+.sec-head p{color:var(--muted);max-width:52ch}
+h3{font-family:var(--display);font-weight:500;font-size:clamp(1.4rem,2.4vw,1.9rem);letter-spacing:-.02em;line-height:1.15}
+.reveal{opacity:1}
+@supports (animation-timeline: view()){
+  .reveal{animation:rise linear both;animation-timeline:view();animation-range:entry 0% cover 28%}
+}
+
+/* IMPACT */
+.impact{background:var(--paper-2)}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:2px solid var(--ink)}
+.stat{padding:30px 24px 30px 0;border-right:1px solid var(--line);transition:background .3s}
+.stat:last-child{border-right:0}
+.stat:hover{background:rgba(226,80,43,.07)}
+.stat .n{font-family:var(--display);font-weight:700;font-size:clamp(2.6rem,5vw,4.2rem);letter-spacing:-.05em;line-height:1;color:var(--ink)}
+.stat .n sup{color:var(--accent);font-size:.45em;vertical-align:top;margin-left:2px}
+.stat p{margin-top:12px;font-size:.93rem;color:var(--ink-2);max-width:26ch}
+.stat small{display:block;margin-top:10px;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.stats + .stats{border-top:1px solid var(--line)}
+
+/* EXPERIENCE */
+.role{display:grid;grid-template-columns:minmax(0,.55fr) minmax(0,1.45fr);gap:clamp(20px,4vw,64px);padding:clamp(34px,5vw,56px) 0;border-top:1px solid var(--line)}
+.role:last-child{border-bottom:1px solid var(--line)}
+.role-meta .co{font-family:var(--display);font-weight:700;font-size:clamp(1.8rem,3.4vw,2.6rem);letter-spacing:-.03em;line-height:1}
+.role-meta .title{margin-top:10px;font-weight:600}
+.role-meta .when{margin-top:8px;font-family:var(--mono);font-size:.78rem;color:var(--muted);letter-spacing:.05em}
+.track{margin-top:26px}
+.track:first-child{margin-top:0}
+.track h4{font-family:var(--mono);font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.track ul{list-style:none}
+.track li{position:relative;padding:12px 0 12px 30px;border-bottom:1px dashed var(--line);transition:padding-left .3s}
+.track li:hover{padding-left:38px}
+.track li::before{content:"";position:absolute;left:0;top:23px;width:16px;height:2px;background:var(--ink);transition:width .3s,background .3s}
+.track li:hover::before{width:24px;background:var(--accent)}
+.track li b{font-weight:600;background:linear-gradient(transparent 62%,rgba(242,165,65,.4) 62%)}
+
+/* VENTURE */
+.venture{background:var(--ink);color:var(--paper);overflow:hidden}
+.venture::before{content:"";position:absolute;inset:auto -15% -40% auto;width:55%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(226,80,43,.45),transparent 65%)}
+.venture h2 em{color:var(--accent-2)}
+.venture .sec-head p{color:rgba(244,239,230,.68)}
+.v-grid{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;perspective:1200px}
+.v-card{position:relative;border:1px solid rgba(244,239,230,.18);border-radius:22px;padding:28px;background:rgba(244,239,230,.03);transition:transform .35s,border-color .35s,background .35s,rotate .35s ease-out}
+.v-card:hover{transform:translateY(-6px) rotate(-.4deg);border-color:var(--accent-2);background:rgba(244,239,230,.06)}
+.v-card .n{font-family:var(--display);font-weight:700;font-size:clamp(2.3rem,4.4vw,3.4rem);letter-spacing:-.04em;color:var(--accent-2);line-height:1}
+.v-card p{margin-top:14px;color:rgba(244,239,230,.82);font-size:.95rem}
+.v-card.wide{grid-column:span 2}
+.v-meta{position:relative;display:flex;flex-wrap:wrap;gap:10px;margin-bottom:28px}
+.chip{display:inline-flex;align-items:center;min-height:34px;padding:0 14px;border-radius:999px;border:1px solid currentColor;font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}
+.venture .chip{color:rgba(244,239,230,.75)}
+
+/* SKILLS */
+.skills-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.skill{border:2px solid var(--ink);border-radius:22px;padding:28px;background:var(--paper);transition:box-shadow .3s,transform .3s}
+.skill:hover{transform:translate(-4px,-4px);box-shadow:8px 8px 0 var(--ink)}
+.skill:nth-child(2):hover{box-shadow:8px 8px 0 var(--accent)}
+.skill:nth-child(3):hover{box-shadow:8px 8px 0 var(--accent-2)}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}
+.tag{padding:6px 12px;border-radius:999px;background:var(--paper-2);font-size:.86rem;font-weight:500}
+.skill .ev{font-size:.88rem;color:var(--muted);border-top:1px dashed var(--line);padding-top:14px}
+
+/* EDUCATION + CREDENTIALS */
+.edu{background:var(--paper-2)}
+.edu-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.edu-item{background:var(--paper);border-radius:22px;padding:30px;border:1px solid var(--line);position:relative;overflow:hidden}
+.edu-item::after{content:"";position:absolute;right:-40px;top:-40px;width:120px;height:120px;border-radius:50%;border:16px solid rgba(226,80,43,.12);transition:transform .5s}
+.edu-item:hover::after{transform:scale(1.4)}
+.edu-item .when{font-family:var(--mono);font-size:.75rem;color:var(--accent);letter-spacing:.08em}
+.edu-item h3{margin:8px 0 6px}
+.edu-item .deg{font-weight:600;margin-bottom:14px}
+.edu-item ul{list-style:none}
+.edu-item li{padding:6px 0 6px 20px;position:relative;font-size:.95rem}
+.edu-item li::before{content:"✦";position:absolute;left:0;color:var(--accent);font-size:.75rem;top:9px}
+.edu-item.full{grid-column:1/-1}
+
+.creds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(30px,5vw,70px);margin-top:clamp(60px,8vw,100px)}
+.creds h3{margin-bottom:18px;padding-bottom:12px;border-bottom:2px solid var(--ink)}
+.cred{padding:16px 0;border-bottom:1px solid var(--line)}
+.cred .top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-weight:600}
+.cred .top span{font-family:var(--mono);font-size:.76rem;color:var(--muted);font-weight:500}
+.cred p{font-size:.93rem;color:var(--ink-2);margin-top:6px}
+
+/* DIVIDER */
+.divider{display:block;width:100%;height:60px;color:var(--paper-2)}
+.divider.dark{color:var(--ink)}
+
+/* CONTACT */
+.contact{text-align:left;padding-bottom:60px}
+.big{font-family:var(--display);font-weight:300;font-size:clamp(2.6rem,8vw,6.6rem);line-height:.95;letter-spacing:-.045em}
+.big em{color:var(--accent)}
+.contact .cta{margin-top:40px}
+footer{border-top:1px solid var(--line);padding:28px 0;font-size:.85rem;color:var(--muted)}
+footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+/* TEXT ANIMATIONS — ported from React Bits (SplitText, BlurText, ScrollFloat, ShinyText, GradientText, DecryptedText, CountUp), tuned for a subtle feel */
+.rb-word{display:inline-block;white-space:nowrap}
+.rb-char{display:inline-block}
+.rb-on .rb-split .rb-char{opacity:0;transform:translateY(14px);transition:opacity .5s ease-out var(--d),transform .5s cubic-bezier(.215,.61,.355,1) var(--d)}
+.rb-on .rb-split.rb-in .rb-char{opacity:1;transform:none}
+.rb-on .rb-blur .rb-word{opacity:0;filter:blur(4px);transform:translateY(6px)}
+.rb-on .rb-blur.rb-in .rb-word{animation:rbBlur .6s ease-out var(--d) forwards}
+@keyframes rbBlur{to{opacity:1;filter:blur(0);transform:none}}
+.rb-on .rb-float .rb-char{opacity:0;transform:translateY(.3em);transition:opacity .6s ease-out var(--d),transform .6s cubic-bezier(.215,.61,.355,1) var(--d)}
+.rb-on .rb-float.rb-in .rb-char{opacity:1;transform:none}
+.rb-shiny{color:rgba(244,239,230,.8);background:linear-gradient(120deg,rgba(255,255,255,0) 42%,rgba(255,255,255,.45) 50%,rgba(255,255,255,0) 58%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;animation:rbShine 9s linear infinite}
+.rb-shiny i{-webkit-text-fill-color:var(--accent-2)}
+@keyframes rbShine{from{background-position:100% 0}to{background-position:-100% 0}}
+.rb-gradient{background:linear-gradient(90deg,var(--accent),#ea6a35,var(--accent));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;animation:rbGrad 14s linear infinite;padding-right:.08em}
+@keyframes rbGrad{from{background-position:0% 50%}to{background-position:200% 50%}}
+.stat .n,.v-card .n{font-variant-numeric:tabular-nums}
+
+/* UI COMPONENTS — ported from Skiper UI (scroll progress, progressive blur, text roll navigation, card stack scroll) and daisyUI (hover 3D, aura) */
+.progress{position:fixed;top:0;left:0;right:0;height:3px;z-index:70;background:linear-gradient(90deg,var(--accent),var(--accent-2));transform:scaleX(0);transform-origin:0 50%;pointer-events:none}
+header::after{content:"";position:absolute;left:0;right:0;top:100%;height:28px;pointer-events:none;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);-webkit-mask-image:linear-gradient(to bottom,#000 10%,transparent);mask-image:linear-gradient(to bottom,#000 10%,transparent)}
+.roll{display:inline-block;position:relative;overflow:hidden;line-height:1.35}
+.roll .r1,.roll .r2{display:block;white-space:nowrap}
+.roll .r2{position:absolute;left:0;top:100%}
+.roll .ch{display:inline-block;transition:transform .42s cubic-bezier(.65,0,.35,1) var(--d)}
+.nav-links a:hover .ch,.nav-links a:focus-visible .ch{transform:translateY(-100%)}
+.stacked .role{position:sticky;background:#faf6ee;border:1px solid var(--line);border-radius:26px;padding:clamp(26px,4vw,48px);margin-bottom:28px;box-shadow:0 -14px 34px -22px rgba(20,22,31,.45);transform-origin:50% 0}
+.stacked .role:last-child{margin-bottom:0;border-bottom:1px solid var(--line)}
+.glare::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgba(255,255,255,.3),transparent 60%);opacity:var(--go,0);transition:opacity .4s}
+@property --aura{syntax:'<angle>';inherits:false;initial-value:0deg}
+.aura{position:relative;animation:auraGlow 3.2s ease-in-out infinite}
+.aura::before{content:"";position:absolute;inset:-4px;border-radius:inherit;padding:2px;pointer-events:none;background:conic-gradient(from var(--aura),transparent 0 50%,var(--accent-2) 72%,var(--accent) 88%,transparent);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:auraSpin 4s linear infinite}
+@keyframes auraSpin{to{--aura:360deg}}
+@keyframes auraGlow{0%,100%{box-shadow:0 0 0 0 rgba(226,80,43,0)}50%{box-shadow:0 0 24px 2px rgba(226,80,43,.3)}}
+
+/* RESPONSIVE */
+@media (max-width:980px){
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stat:nth-child(2){border-right:0}
+  .stat{border-bottom:1px solid var(--line)}
+  .skills-grid{grid-template-columns:1fr 1fr}
+  .v-grid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:768px){
+  .menu-btn{display:inline-flex}
+  .nav{flex-wrap:wrap}
+  .nav-links{display:none;width:100%;flex-direction:column;padding:6px 0 14px}
+  #menu-toggle:checked ~ .nav-links{display:flex}
+  .hero-grid{grid-template-columns:1fr}
+  .portrait{justify-self:start;max-width:320px;order:-1;margin-left:24px}
+  .badge{left:-20px}
+  .sec-head,.role,.creds{grid-template-columns:1fr}
+  .edu-list{grid-template-columns:1fr}
+  .skills-grid{grid-template-columns:1fr}
+  .v-card.wide{grid-column:auto}
+  .v-grid{grid-template-columns:1fr}
+}
+@media (max-width:480px){
+  body{font-size:16px}
+  .stats{grid-template-columns:1fr}
+  .stat{border-right:0;padding-right:0}
+  .portrait{max-width:260px;margin-left:20px}
+  .badge{max-width:170px;padding:10px 12px}
+  .btn{width:100%;justify-content:center}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+<style data-shipfolio-guard="">img,video,canvas,svg{max-width:100%}html,body{overflow-x:clip}</style></head>
+<body>
+<div class="progress" aria-hidden="true"></div>
+
+<header>
+  <nav class="wrap nav" aria-label="Main">
+    <a class="brand" href="#top">Bhaavan<span>.</span></a>
+    <input type="checkbox" id="menu-toggle" aria-label="Toggle menu">
+    <label class="menu-btn" for="menu-toggle">Menu</label>
+    <ul class="nav-links">
+      <li><a href="#impact">Impact</a></li>
+      <li><a href="#experience">Experience</a></li>
+      <li><a href="#venture">Venture</a></li>
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#education">Education</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow fade">Strategy · Pricing · Analytics</span>
+        <h1 id="hero-title" class="fade d1">Bhaavan <em>Nimmagadda</em><strong>turns data into growth.</strong></h1>
+        <p class="lede fade d2">A strategy and analytics leader with <b>over 5 years</b> across consulting and analytics at <b>PepsiCo</b> and <b>ZS Associates</b> — translating complex performance metrics into pricing and commercial decisions that senior stakeholders act on. Now co-founding a D2C wellness brand.</p>
+        <div class="cta fade d3">
+          <a class="btn solid" href="#impact">See the impact</a>
+          <a class="btn ghost" href="http://www.linkedin.com/in/bhaavan-nimmagadda" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9.5h4V21H3zM9.5 9.5h3.8v1.6h.1c.5-1 1.8-2 3.8-2 4 0 4.8 2.6 4.8 6V21h-4v-5.2c0-1.2 0-2.9-1.8-2.9s-2 1.4-2 2.8V21h-4z"></path></svg>
+            LinkedIn</a>
+          <a class="btn ghost" href="https://github.com/bhaavannimmagadda2027-commits" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.7.2 2.9.1 3.2.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5z"></path></svg>
+            GitHub</a>
+        </div>
+      </div>
+      <figure class="portrait fade d4">
+        <div class="frame">
+          <img src="../assets/me/headshot.jpg" alt="Portrait of Bhaavan Nimmagadda" width="400" height="500">
+        </div>
+        <figcaption class="badge"><b>$4M</b>incremental sales unlocked through pricing analytics at PepsiCo</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <span>Revenue Growth Management <i>✦</i></span><span>Pricing Strategy <i>✦</i></span><span>Promo ROI <i>✦</i></span><span>Decision Analytics <i>✦</i></span><span>Performance Marketing <i>✦</i></span><span>D2C Unit Economics <i>✦</i></span>
+      <span>Revenue Growth Management <i>✦</i></span><span>Pricing Strategy <i>✦</i></span><span>Promo ROI <i>✦</i></span><span>Decision Analytics <i>✦</i></span><span>Performance Marketing <i>✦</i></span><span>D2C Unit Economics <i>✦</i></span>
+    </div>
+  </div>
+
+  <section class="impact" id="impact" aria-labelledby="impact-title">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <h2 id="impact-title">Impact, <em>in numbers.</em></h2>
+        <p>Measurable outcomes from pricing, promotion and reporting work at PepsiCo and ZS Associates.</p>
+      </div>
+      <div class="stats reveal">
+        <div class="stat"><div class="n">$4M</div><p>Incremental beverage sales from regression-led pricing decisions.</p><small>PepsiCo</small></div>
+        <div class="stat"><div class="n">36<sup>%</sup></div><p>Sharper competitive benchmarking accuracy by validating competitor threat.</p><small>PepsiCo</small></div>
+        <div class="stat"><div class="n">$135K</div><p>Saved annually with a centralized Power BI dashboard replacing 9 manual reports.</p><small>ZS Associates</small></div>
+        <div class="stat"><div class="n">2,000+</div><p>Annual hours optimized by automating 60+ business reports across 6 teams.</p><small>ZS Associates</small></div>
+      </div>
+      <div class="stats reveal">
+        <div class="stat"><div class="n">180</div><p>SKUs covered in end-to-end price elasticity analysis across the USA.</p><small>PepsiCo</small></div>
+        <div class="stat"><div class="n">20<sup>%</sup></div><p>Better sales-attribution accuracy by modelling own &amp; competitor prices as one variable.</p><small>PepsiCo</small></div>
+        <div class="stat"><div class="n">$450M</div><p>Promotional spend re-optimized for a 1% ROI lift by moving 13% to high-return channels.</p><small>ZS Associates</small></div>
+        <div class="stat"><div class="n">8x</div><p>Lifetime ROAS across 10 Meta ad creatives — vs a 5X industry average.</p><small>Recovery Company</small></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="experience" aria-labelledby="exp-title">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <h2 id="exp-title">Where the <em>work</em> happened.</h2>
+        <p>From decision analytics in pharma marketing to revenue growth management for one of the world's largest beverage portfolios.</p>
+      </div>
+
+      <article class="role reveal">
+        <div class="role-meta">
+          <h3 class="co">PepsiCo</h3>
+          <p class="title">Associate Manager</p>
+          <p class="when">Jun’24 – May’26 · Hyderabad</p>
+        </div>
+        <div>
+          <div class="track">
+            <h4>Revenue Growth Management</h4>
+            <ul>
+              <li>Generated <b>$4M in incremental sales</b> for PepsiCo beverages by applying advanced regression analysis to strategic pricing decisions.</li>
+              <li>Enhanced competitive benchmarking accuracy by <b>36%</b> by validating competitor threat, sharpening KAMs’ pricing strategy.</li>
+              <li>Improved sales-attribution accuracy by <b>20%</b> by grouping own and competitor prices into one variable, strengthening executive pricing decisions.</li>
+              <li>Increased promo ROI by <b>5%</b> by identifying profitable promotion weeks from historical sales and promo patterns.</li>
+              <li>Owned end-to-end stakeholder engagement and delivered price elasticity analysis of <b>180 SKUs</b> across the USA.</li>
+            </ul>
+          </div>
+          <div class="track">
+            <h4>AI Initiatives</h4>
+            <ul>
+              <li>Led AI initiatives and saved <b>160 annual hours</b> by building a Python + AI tool that executes regression models.</li>
+              <li>Restructured pricing insight generation for <b>40 KAMs</b>, moving them from quarterly to monthly strategy.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="role reveal">
+        <div class="role-meta">
+          <h3 class="co">ZS Associates</h3>
+          <p class="title">Associate Consultant – Decision Analytics</p>
+          <p class="when">Nov’20 – May’24 · Pune</p>
+        </div>
+        <div>
+          <div class="track">
+            <h4>Data Analytics &amp; Process Optimization</h4>
+            <ul>
+              <li>Improved promo ROI by <b>1% on $450M</b> of promotional spend by shifting 13% of spend from low-return to high-return channels.</li>
+              <li>Reduced patient drop-off from the drug by <b>2%</b> by restructuring Salesforce-user touchpoints across therapies.</li>
+              <li>Saved <b>$135K annually</b> by building a centralized Power BI dashboard for 6 teams, replacing 9 manual reports.</li>
+              <li>Optimized <b>2,000+ annual hours</b> by automating 60+ business reports across 6 teams with Power BI and VBA.</li>
+            </ul>
+          </div>
+          <div class="track">
+            <h4>Leadership &amp; Program Delivery</h4>
+            <ul>
+              <li>Delivered an <b>error-free deployment</b> by leading User Acceptance Testing for data encryption across 40+ datasets.</li>
+              <li>Earned promotion to Associate Consultant for high client satisfaction; led a <b>team of 6</b> delivering marketing mix projects.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="role reveal">
+        <div class="role-meta">
+          <h3 class="co">P+U Architects</h3>
+          <p class="title">Intern – Junior Architect</p>
+          <p class="when">2019 – 20</p>
+        </div>
+        <div>
+          <div class="track">
+            <ul>
+              <li>Delivered client-centric architectural designs across <b>6 housing projects</b>, shaped around each client’s taste and needs.</li>
+              <li>Collaborated with the founder to realize conceptual designs as client-ready deliverables.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <svg class="divider dark" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true"><path fill="currentColor" d="M0 60V30c240-40 480 30 720 10s480-50 720-10v30z"></path></svg>
+  <section class="venture" id="venture" aria-labelledby="venture-title">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <h2 id="venture-title">Recovery Company — <em>built, not just advised.</em></h2>
+        <p>Co-founder of a D2C recovery and wellness brand, live on Shopify with 8 sourced SKUs. Managing the end-to-end P&amp;L.</p>
+      </div>
+      <div class="v-meta reveal">
+        <span class="chip">Co-Founder</span><span class="chip">Jul’26 – Present</span><span class="chip">Brand Build &amp; Growth</span><span class="chip">Performance Marketing</span>
+      </div>
+      <div class="v-grid">
+        <div class="v-card wide reveal"><div class="n">₹11.5L</div><p>Revenue across 1000+ orders in the first ~6 weeks of launch, scaled through Facebook and Instagram ads.</p></div>
+        <div class="v-card reveal"><div class="n">8x</div><p>Lifetime ROAS across 10 Meta ad creatives — 60% above the 5X industry average.</p></div>
+        <div class="v-card reveal"><div class="n">15x</div><p>ROAS recovering ~25% of lost checkout revenue by re-targeting abandoned-cart audiences.</p></div>
+        <div class="v-card reveal"><div class="n">40→20%</div><p>RTO cut in half against a ~30% industry average, via prepaid incentives and order-confirmation checks.</p></div>
+        <div class="v-card reveal"><div class="n">48hrs</div><p>Delivery time, down from 5 days, by partnering with dark stores — lifting orders 4% in major cities.</p></div>
+        <div class="v-card wide reveal"><div class="n">28%</div><p>Landed cost as a share of retail for the 2 hero SKUs, prioritized after screening 20+ products across 10 parameters.</p></div>
+      </div>
+    </div>
+  </section>
+  <svg class="divider dark" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true" style="transform:scaleY(-1)"><path fill="currentColor" d="M0 60V30c240-40 480 30 720 10s480-50 720-10v30z"></path></svg>
+
+  <section id="skills" aria-labelledby="skills-title">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <h2 id="skills-title">The <em>toolkit.</em></h2>
+        <p>Grouped by how they’re used — with where each one shows up in the work.</p>
+      </div>
+      <div class="skills-grid">
+        <div class="skill reveal">
+          <h3>Commercial &amp; Pricing Strategy</h3>
+          <div class="tags"><span class="tag">Commercial and Pricing Strategy</span><span class="tag">Revenue Growth</span><span class="tag">Competitive Intelligence</span></div>
+          <p class="ev">Revenue Growth Management at PepsiCo: price elasticity, competitor benchmarking and promo planning.</p>
+        </div>
+        <div class="skill reveal">
+          <h3>Data &amp; Analytics</h3>
+          <div class="tags"><span class="tag">SQL</span><span class="tag">Python</span><span class="tag">Power BI</span><span class="tag">Tableau</span><span class="tag">Data-Driven Decision Making</span></div>
+          <p class="ev">Python + AI regression tool at PepsiCo; centralized Power BI dashboards and report automation at ZS Associates.</p>
+        </div>
+        <div class="skill reveal">
+          <h3>Productivity &amp; Automation</h3>
+          <div class="tags"><span class="tag">Excel</span><span class="tag">PowerPoint</span><span class="tag">VBA</span></div>
+          <p class="ev">VBA alongside Power BI to automate 60+ business reports across 6 teams at ZS Associates.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <svg class="divider" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true"><path fill="currentColor" d="M0 60L1440 0v60z"></path></svg>
+  <section class="edu" id="education" aria-labelledby="edu-title">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <h2 id="edu-title">Learning &amp; <em>leading.</em></h2>
+        <p>An architect by training, a strategist by practice — and a captain on the side.</p>
+      </div>
+      <div class="edu-list">
+        <article class="edu-item reveal">
+          <p class="when">2026 – Present · Gurugram</p>
+          <h3>Masters’ Union</h3>
+          <p class="deg">PGP in Technology and Business Management</p>
+          <ul>
+            <li>President, Masters’ Union Consulting Club (1 of 470)</li>
+            <li>Manoj Kohli merit-based scholarship — 25% (5% of the batch)</li>
+            <li>Winner of the cohort-wide Drop-Shipping Challenge to ideate, launch and scale a D2C business</li>
+          </ul>
+        </article>
+        <article class="edu-item reveal">
+          <p class="when">2015 – 2020 · Odisha</p>
+          <h3>National Institute of Technology, Rourkela</h3>
+          <p class="deg">Bachelor of Planning &amp; Architecture · 7.21/10</p>
+          <ul>
+            <li>President, Student Activity Center (1 of 900)</li>
+            <li>Championship-winning captain in 2018-19 and 3-time national champion of Inter-NIT Kabaddi (2016-17, 19)</li>
+            <li>President, Student Activity Center – Technical Society; organized Innovision-2016 with a footfall of 1,300</li>
+          </ul>
+        </article>
+        <article class="edu-item full reveal">
+          <p class="when">2010 – 2015 · Gudivada</p>
+          <h3>Triveni Public School</h3>
+          <p class="deg">Class XII – 95.3% (CBSE) · Class X – 93% (Andhra Pradesh State Board)</p>
+          <ul>
+            <li>Sports Convener (1 of 600); organized a sports fest with 300+ participants</li>
+            <li>Head Boy from 2011-13</li>
+            <li>99th percentile in India in the International Maths Olympiad</li>
+          </ul>
+        </article>
+      </div>
+
+      <div class="creds">
+        <div class="reveal">
+          <h3>Certifications</h3>
+          <div class="cred">
+            <div class="top">Strategy Consulting Virtual Experience Program — BCG <span>2020</span></div>
+            <p>Structured problem-solving: defining the core business problem before analyzing data or building solutions. Contingency planning to protect recommendations when execution constraints arise.</p>
+          </div>
+          <div class="cred">
+            <div class="top">New Market Initiatives — Yale School of Business <span>2020</span></div>
+            <p>Product and service innovation to create value; forward and backward integration to capture it.</p>
+          </div>
+        </div>
+        <div class="reveal">
+          <h3>Recognition</h3>
+          <div class="cred">
+            <div class="top">“Acting as Owner” SMILES Award — PepsiCo <span>2026</span></div>
+            <p>For excellent stakeholder engagement and project initiatives.</p>
+          </div>
+          <div class="cred">
+            <div class="top">Selected to represent ZS-India in Chicago <span>2024</span></div>
+            <p>1 of 35+ associate consultants chosen to represent the ZS-India team at the client location.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="contact" id="contact" aria-labelledby="contact-title">
+    <div class="wrap">
+      <span class="eyebrow">Get in touch</span>
+      <h2 id="contact-title" class="big reveal" style="margin-top:20px">Let’s talk <em>growth.</em></h2>
+      <div class="cta">
+        <a class="btn solid aura" href="mailto:bhaavan.nimmagadda2027@mastersunion.org">bhaavan.nimmagadda2027@mastersunion.org</a>
+        <a class="btn ghost" href="http://www.linkedin.com/in/bhaavan-nimmagadda" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+        <a class="btn ghost" href="https://github.com/bhaavannimmagadda2027-commits" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© Bhaavan Nimmagadda</span>
+    <a href="#top">Back to top ↑</a>
+  </div>
+</footer>
+
+<script>
+/* Text animations ported from React Bits (reactbits.dev): SplitText, BlurText, DecryptedText, ScrollFloat, CountUp, ShinyText, GradientText — tuned for a subtle feel */
+(function(){
+  var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce)return;
+  var root=document.documentElement;root.classList.add('rb-on');
+  var jobs=[];
+  function textNodes(el){var out=[],w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT,null);var n;while((n=w.nextNode()))if(n.nodeValue.trim())out.push(n);return out;}
+  function split(el,mode,step){
+    el.setAttribute('aria-label',el.textContent.replace(/\s+/g,' ').trim());
+    var i=0;
+    textNodes(el).forEach(function(tn){
+      var frag=document.createDocumentFragment();
+      tn.nodeValue.split(/(\s+)/).forEach(function(part){
+        if(!part)return;
+        if(/^\s+$/.test(part)){frag.appendChild(document.createTextNode(' '));return;}
+        var w=document.createElement('span');w.className='rb-word';w.setAttribute('aria-hidden','true');
+        if(mode==='chars'){
+          Array.from(part).forEach(function(ch){var s=document.createElement('span');s.className='rb-char';s.textContent=ch;s.style.setProperty('--d',(i++*step)+'ms');w.appendChild(s);});
+        }else{w.textContent=part;w.style.setProperty('--d',(i++*step)+'ms');}
+        frag.appendChild(w);
+      });
+      tn.parentNode.replaceChild(frag,tn);
+    });
+  }
+  function watch(el,fn){jobs.push({el:el,fn:fn});}
+
+  /* SplitText — hero headline */
+  var h1=document.querySelector('.hero h1');
+  if(h1){h1.classList.remove('fade','d1');split(h1,'chars',14);h1.classList.add('rb-split');watch(h1,function(){h1.classList.add('rb-in');});}
+
+  /* BlurText — hero intro */
+  var lede=document.querySelector('.hero .lede');
+  if(lede){lede.classList.remove('fade','d2');split(lede,'words',12);lede.classList.add('rb-blur');watch(lede,function(){setTimeout(function(){lede.classList.add('rb-in');},200);});}
+
+  /* DecryptedText — eyebrow labels */
+  var glyphs='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  document.querySelectorAll('.eyebrow').forEach(function(el){
+    var final=el.textContent;el.setAttribute('aria-label',final);
+    watch(el,function(){
+      var shown=0,id=setInterval(function(){
+        shown+=1.5;
+        el.textContent=Array.from(final).map(function(c,i){return(i<shown||/[\s·]/.test(c))?c:glyphs[(Math.random()*glyphs.length)|0];}).join('');
+        if(shown>=final.length){clearInterval(id);el.textContent=final;}
+      },35);
+    });
+  });
+
+  /* ScrollFloat — section headings */
+  document.querySelectorAll('.sec-head h2').forEach(function(h){
+    split(h,'chars',10);h.classList.add('rb-float');watch(h,function(){h.classList.add('rb-in');});
+  });
+
+  /* CountUp — impact numbers */
+  document.querySelectorAll('.stat .n, .v-card .n, .badge b').forEach(function(el){
+    if(/→/.test(el.textContent))return;
+    var tn=null;for(var k=0;k<el.childNodes.length;k++){var c=el.childNodes[k];if(c.nodeType===3&&/\d/.test(c.nodeValue)){tn=c;break;}}
+    if(!tn)return;
+    var orig=tn.nodeValue,m=orig.match(/^([^\d]*)(\d[\d,]*(?:\.\d+)?)([\s\S]*)$/);if(!m)return;
+    var target=parseFloat(m[2].replace(/,/g,'')),dec=(m[2].split('.')[1]||'').length,comma=m[2].indexOf(',')>-1;
+    function fmt(v){var s=comma?v.toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec}):v.toFixed(dec);return m[1]+s+m[3];}
+    el.setAttribute('aria-label',el.textContent);
+    tn.nodeValue=fmt(0);
+    watch(el,function(){
+      var t0=performance.now(),dur=1100;
+      (function tick(now){var p=Math.min(1,(now-t0)/dur),e=p===1?1:1-Math.pow(1-p,3);
+        tn.nodeValue=p<1?fmt(target*e):orig;if(p<1)requestAnimationFrame(tick);})(t0);
+    });
+  });
+
+  /* ShinyText — ticker; GradientText — contact accent */
+  document.querySelectorAll('.ticker span').forEach(function(s){s.classList.add('rb-shiny');});
+  var g=document.querySelector('.contact .big em');if(g)g.classList.add('rb-gradient');
+
+  /* run each animation once its element reaches the viewport or has been scrolled past */
+  var pending=jobs.slice(),ticking=false;
+  function check(){
+    ticking=false;
+    var lim=innerHeight*0.9;
+    pending=pending.filter(function(j){
+      if(j.el.getBoundingClientRect().top<lim){j.fn();return false;}
+      return true;
+    });
+    if(!pending.length){removeEventListener('scroll',onScroll);removeEventListener('resize',onScroll);}
+  }
+  function onScroll(){if(!ticking){ticking=true;requestAnimationFrame(check);}}
+  addEventListener('scroll',onScroll,{passive:true});addEventListener('resize',onScroll);
+  check();
+})();
+
+/* UI components ported from Skiper UI (scroll progress, text roll navigation, card stack scroll) and daisyUI (hover 3D) */
+(function(){
+  var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* Scroll progress — bar fills as the page is read */
+  var bar=document.querySelector('.progress');
+  function progress(){var h=document.documentElement.scrollHeight-innerHeight;if(bar)bar.style.transform='scaleX('+(h>0?Math.min(1,Math.max(0,scrollY/h)):0)+')';}
+
+  /* Text roll navigation — letters roll up to a copy of the word on hover */
+  document.querySelectorAll('.nav-links a').forEach(function(a){
+    var t=a.textContent.trim();a.setAttribute('aria-label',t);
+    var roll=document.createElement('span');roll.className='roll';roll.setAttribute('aria-hidden','true');
+    ['r1','r2'].forEach(function(cls){
+      var row=document.createElement('span');row.className=cls;
+      Array.from(t).forEach(function(ch,i){var s=document.createElement('span');s.className='ch';s.textContent=ch;s.style.setProperty('--d',(i*22)+'ms');row.appendChild(s);});
+      roll.appendChild(row);
+    });
+    a.textContent='';a.appendChild(roll);
+  });
+
+  /* Card stack scroll — experience cards stick once fully read, and the next card slides over */
+  var exp=document.getElementById('experience'),roles=exp?[].slice.call(exp.querySelectorAll('.role')):[];
+  function layout(){roles.forEach(function(r,i){r.style.top=Math.min(84+i*16,innerHeight-r.offsetHeight-16)+'px';});stack();}
+  function stack(){
+    if(reduce)return;
+    for(var i=0;i<roles.length-1;i++){
+      var a=roles[i].getBoundingClientRect(),b=roles[i+1].getBoundingClientRect();
+      var p=Math.min(1,Math.max(0,(a.bottom-b.top)/a.height));
+      roles[i].style.scale=String(1-0.05*p);
+    }
+  }
+  if(roles.length>1){
+    exp.classList.add('stacked');
+    if('ResizeObserver' in window){var ro=new ResizeObserver(layout);roles.forEach(function(r){ro.observe(r);});}
+  }
+
+  var ticking=false;
+  function frame(){ticking=false;progress();if(roles.length>1)stack();}
+  addEventListener('scroll',function(){if(!ticking){ticking=true;requestAnimationFrame(frame);}},{passive:true});
+  addEventListener('resize',function(){progress();if(roles.length>1)layout();});
+  progress();if(roles.length>1)layout();
+
+  /* Hover 3D — portrait and venture cards tilt toward the pointer with a soft glare */
+  if(reduce||!matchMedia('(hover: hover) and (pointer: fine)').matches)return;
+  function tilt(host,el,max){
+    el.classList.add('glare');
+    host.addEventListener('pointermove',function(e){
+      var r=host.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+      var rx=-y*2*max,ry=x*2*max,ang=Math.sqrt(rx*rx+ry*ry);
+      el.style.rotate=ang<.01?'none':(rx.toFixed(3)+' '+ry.toFixed(3)+' 0 '+ang.toFixed(2)+'deg');
+      el.style.setProperty('--gx',((x+.5)*100).toFixed(1)+'%');el.style.setProperty('--gy',((y+.5)*100).toFixed(1)+'%');el.style.setProperty('--go','1');
+    });
+    host.addEventListener('pointerleave',function(){el.style.rotate='none';el.style.setProperty('--go','0');});
+  }
+  var pf=document.querySelector('.portrait'),fr=pf&&pf.querySelector('.frame');if(fr)tilt(pf,fr,7);
+  document.querySelectorAll('.v-card').forEach(function(c){tilt(c,c,5);});
+})();
+</script>
+
+</body></html>
